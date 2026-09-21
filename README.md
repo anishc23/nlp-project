@@ -8,6 +8,8 @@ around a morphological analyser written from scratch.
 |---|---|
 | [`Marathi-news-intelligence-pipeline/`](Marathi-news-intelligence-pipeline/) | The code — see its [README](Marathi-news-intelligence-pipeline/README.md) and [GUIDE](Marathi-news-intelligence-pipeline/GUIDE.md) |
 | [`Marathi-news-intelligence-pipeline/Marathi-NLP-Demo.html`](Marathi-news-intelligence-pipeline/Marathi-NLP-Demo.html) | Standalone demo page — download and double-click, no install needed |
+| [`docs/Demo-User-Manual.pdf`](docs/Demo-User-Manual.pdf) | How to run and use the demo, step by step |
+| [`docs/Project-Explanation-Guide.pdf`](docs/Project-Explanation-Guide.pdf) | Plain-language explanation of the project, speaking notes and likely questions |
 | `NLP_Mini_Project_Deck.pptx`, `nlp ppt.pdf` | Presentation slides |
 
 ## Quick start
@@ -29,6 +31,6 @@ python scripts/build_index.py --plain-bm25       # BM25 (+ plain ablation) and d
 streamlit run app/dashboard.py
 ```
 
-The first run downloads about 3 GB of models from the Hugging Face Hub. The
+The first run downloads about 5 GB of models from the Hugging Face Hub. The
 code runs on NVIDIA GPUs (CUDA), Apple Silicon (MPS), or CPU, picking one
 automatically.
