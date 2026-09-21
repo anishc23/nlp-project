@@ -57,9 +57,10 @@ def _tfidf_matrix(sentences: List[str]) -> np.ndarray:
         for t in d:
             vocab.setdefault(t, len(vocab))
     if not vocab:
-        return np.zeros((len(sentences), 1), dtype="float32")
+        return np.zeros((len(sentences), 1), dtype="float64")
 
-    tf = np.zeros((len(docs), len(vocab)), dtype="float32")
+    # float64 so the page's JavaScript port (always float64) ranks identically.
+    tf = np.zeros((len(docs), len(vocab)), dtype="float64")
     for i, d in enumerate(docs):
         for t in d:
             tf[i, vocab[t]] += 1.0
@@ -114,7 +115,7 @@ def _mmr(order: List[int], sim: np.ndarray, k: int,
         best, best_score = None, -np.inf
         for idx in candidates:
             redundancy = max((sim[idx, j] for j in selected), default=0.0)
-            score = lambda_ * relevance[idx] - (1 - lambda_) * redundancy
+            score = round(lambda_ * relevance[idx] - (1 - lambda_) * redundancy, 12)
             if score > best_score:
                 best, best_score = idx, score
         selected.append(best)
@@ -147,7 +148,11 @@ def summarize(text: str, k: int = 3, method: str = "textrank",
         vectors = _tfidf_matrix(sentences)
 
     sim = _cosine_graph(vectors)
-    ranked = list(np.argsort(-_pagerank(sim)))
+    # Scores are rounded before a stable sort so that exact ties (repeated
+    # sentences are common in news) keep document order. Without the rounding
+    # the order of a tie depends on last-bit floating-point noise, which
+    # differs between numpy and the page's JavaScript port.
+    ranked = [int(i) for i in np.argsort(-np.round(_pagerank(sim), 12), kind="stable")]
     chosen = sorted(_mmr(ranked, sim, k, lambda_))
     return Summary(sentences=[sentences[i] for i in chosen], indices=chosen,
                    method=method)

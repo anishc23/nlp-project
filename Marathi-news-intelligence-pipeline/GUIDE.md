@@ -86,27 +86,43 @@ a ranking booster. Saying this yourself is much stronger than being caught.
 Double-click **`Marathi-NLP-Demo.html`** in the project folder. It opens in
 your browser. That's it.
 
-- No Python, no installation, no internet needed
+- No Python, no installation, no internet needed (except the first English
+  translation — see below)
 - Works on any laptop — you can email it to yourself or carry it on a pendrive
-- It is **one single file** (about 700 KB) containing everything
+- It is **one single file** (about 4 MB) containing everything
 
 > **Tip:** with internet, the page loads proper Marathi typefaces. Offline it
 > falls back to your system's Marathi font — still perfectly readable, just
 > slightly different. Either is fine for a demo.
 
-## What's genuinely live vs. pre-computed
+## Everything is live — paste any Marathi text
 
-Be accurate about this if asked:
+Every tab computes on whatever you type or paste, in your browser:
 
-- **Morphology tab and Search tab are computing live.** Type anything and it
-  runs in your browser — real code, not a recording.
-- **Full pipeline tab shows stored results.** The neural models (BERT, NLLB)
-  are far too large to run in a web page, so those outputs were computed by
-  the Python pipeline and saved.
+- **Morphology** — one word shows the root + suffix blocks; paste a sentence
+  or a whole article and you get every word's root in a table.
+- **Search** — any query; you can also paste your own articles into the index
+  ("Add your own articles").
+- **Full pipeline** — paste any article (or pick an example) and press
+  **Analyse**. Category, summary, entities, sentiment all run on the spot;
+  **Translate to English** runs NLLB-200 in the browser.
 
-The browser analyser was verified against the Python one on **8,772 words with
-zero mismatches** (`python scripts/verify_demo.py`), so it is the same
-algorithm, not a simplified imitation.
+Be accurate about *which models* run, if asked:
+
+- **Summary (E) and morphology (I)** run the exact same algorithms as Python.
+- **Category (D), sentiment (F) and entities (G)** use small in-browser
+  models trained to imitate the MahaBERT models (the real ones are ~700 MB
+  each). Each stage shows how often it agrees with the real model on 1,362
+  held-out articles: topic 83%, article tone 74%, entities F1 0.72.
+- **Translation (A)** is the real NLLB-200. The first click downloads it
+  (~900 MB, needs internet), then the browser caches it.
+- **Want the real models for D, F, G?** Run `python app/server.py` before
+  opening the page. The badge next to *Analyse* switches to *Full models ·
+  local server* and everything goes through the real pipeline.
+
+`python scripts/verify_demo.py` checks the page against the Python code on
+1,000 held-out articles: identical roots, summaries, topics, sentiment and
+entities.
 
 ---
 
@@ -156,7 +172,10 @@ researcher does.
 
 ## Tab 3 — Full pipeline (2 minutes)
 
-**Do this:** pick an article from the dropdown. Walk down the stages.
+**Do this:** the first example is already analysed. Walk down the stages.
+Then **paste an article from today's Marathi news** (copy one from
+lokmat.com or bbc.com/marathi) and press **Analyse** — this proves it isn't
+stored output.
 
 **Say this:**
 > "One article, every stage. **D** — categorised as Politics with 96%
@@ -165,7 +184,9 @@ researcher does.
 > sentence, this one is negative. **A** — translated to English so a
 > non-Marathi reader can follow it."
 
-**Switch to a different article** to show it isn't one lucky example.
+**Point at the small grey label on each stage** ("in-browser · 83%
+agreement"): it tells the audience exactly how far the in-browser model can
+be trusted. If `python app/server.py` is running, the labels say "full model".
 
 ---
 
@@ -193,9 +214,17 @@ researcher does.
 
 **"Is your summarizer better than just taking the first sentences?"**
 > No — and I reported that. For news, the opening sentences are a very strong
-> baseline because journalists put key facts first. My TextRank scores 0.096
+> baseline because journalists put key facts first. My TextRank scores 0.098
 > ROUGE-1 against the baseline's 0.105. I included the baseline specifically so
 > the comparison would be honest.
+
+**"Is the web page running the real models?"**
+> The morphology, search and summary are the exact same algorithms as the
+> Python — checked on 1,000 articles with zero differences. For category,
+> sentiment and entities the page uses small models I trained to imitate the
+> MahaBERT models, because those are 700 MB each. I measured how often they
+> agree: 83% on topic, 74% on article tone, F1 0.72 on entities — and the page
+> shows those numbers. With the local server running, it uses the real models.
 
 **"What data did you use?"**
 > XL-Sum Marathi — 10,903 BBC Marathi articles with human-written summaries —
@@ -232,14 +261,20 @@ streamlit run app/dashboard.py
 The Streamlit dashboard has an **Analyse** tab where you can paste any Marathi
 text, or fetch today's live news, and watch the models process it.
 
+**Or keep the HTML page and give it the real models:**
+
+```bash
+python app/server.py        # leave running, then open Marathi-NLP-Demo.html
+```
+
 **Recommended demo setup:** lead with the HTML file (fast, reliable, can't
-break), then open Streamlit to prove the models really run.
+break), then start the server or open Streamlit to show the full models.
 
 To reproduce the numbers:
 
 ```bash
 python scripts/evaluate.py --task all     # all five experiments
-python -m pytest tests/ -q                # 44 tests
+python -m pytest tests/ -q                # 51 tests
 python scripts/verify_demo.py             # browser/Python parity check
 ```
 
@@ -262,6 +297,7 @@ src/
   retrieve.py              (C) search
   ingest.py                live news from RSS
   pipeline.py              runs all stages on one article
+  lite.py                  small in-browser models (D, F, G) for the demo page
 
 scripts/
   download_data.py         fetch the datasets
@@ -269,24 +305,38 @@ scripts/
   build_index.py           build the search index
   train_classifier.py      fine-tune the classifier (95.4%)
   evaluate.py              all experiments
+  distill_label.py         label XL-Sum with the full models
+  train_lite.py            train the in-browser models on those labels
   export_demo.py           export data for the HTML page
   build_demo_page.py       build the HTML page
   verify_demo.py           check browser matches Python
 
 app/
   dashboard.py             the live Streamlit app
-  demo_template.html       source of the demo page
+  server.py                local model server the demo page can use
+  demo_template.html       source of the demo page (layout)
+  demo_engine.js           source of the demo page (NLP code, run in the browser)
+  lite_models.json         weights of the in-browser models
 
-tests/test_pipeline.py     44 tests
+tests/test_pipeline.py     51 tests
 ```
 
 ## If you change the demo page
 
-Edit `app/demo_template.html`, then:
+Edit `app/demo_template.html` or `app/demo_engine.js`, then:
 
 ```bash
+python scripts/build_demo_page.py     # writes Marathi-NLP-Demo.html
+python scripts/verify_demo.py         # must still say PARITY OK
+```
+
+To retrain the in-browser models (about 40 minutes on a laptop GPU):
+
+```bash
+python scripts/distill_label.py
+python scripts/train_lite.py
+python scripts/export_demo.py
 python scripts/build_demo_page.py
-copy outputs\demo.html Marathi-NLP-Demo.html
 ```
 
 ---
@@ -298,5 +348,6 @@ copy outputs\demo.html Marathi-NLP-Demo.html
 | **Open the demo** | double-click `Marathi-NLP-Demo.html` |
 | **Best moment** | Search tab: `न्यायालय` → 1 vs 14 |
 | **Honesty moment** | Search tab: `पाऊस` → 3 vs 3, say so out loud |
-| **Prove it's live** | type your own word in the Morphology tab |
+| **Prove it's live** | paste today's Marathi news into Full pipeline → Analyse |
+| **Real models on the page** | `python app/server.py`, then open the page |
 | **Numbers to remember** | 7 tasks · 3,000 articles · 36% inflected · 54.7% smaller index · 95.4% classifier |

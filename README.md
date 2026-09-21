@@ -13,7 +13,8 @@ around a morphological analyser written from scratch.
 ## Quick start
 
 **Demo page (no Python):** open `Marathi-news-intelligence-pipeline/Marathi-NLP-Demo.html`
-in any browser.
+in any browser and paste Marathi text into any tab. To have the page use the
+full models, run `python app/server.py` from the project folder first.
 
 **Full system (Python 3.10+):**
 

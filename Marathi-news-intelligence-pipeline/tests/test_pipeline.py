@@ -240,6 +240,101 @@ class TestAliasMerging:
         assert self.merge(counts) == counts
 
 
+# ------------------------------------------------------ in-browser students
+LITE = Path(__file__).resolve().parent.parent / "app" / "lite_models.json"
+NEEDS_LITE = pytest.mark.skipif(not LITE.exists(),
+                                reason="run scripts/train_lite.py to build app/lite_models.json")
+
+
+class TestLite:
+    def test_words_split_on_boundaries_and_keep_offsets(self):
+        from src.lite import words
+        text = "इंडो-तिबेटन पोलीस, मुंबईत."
+        toks = [text[s:e] for s, e in words(text)]
+        assert toks == ["इंडो", "तिबेटन", "पोलीस", "मुंबईत"]
+
+    def test_digit_shape_is_explicit(self):
+        from src.lite import _shape
+        assert _shape("2024") == "digit"
+        assert _shape("२०२४") == "digit"
+        assert _shape("BBC") == "latin"
+        assert _shape("मुंबई") == "deva"
+
+    @NEEDS_LITE
+    def test_topic_student_recognises_sport(self):
+        from src.lite import Lite
+        m = Lite.load()
+        p = m.topic("भारताचा विजय", "भारतीय क्रिकेट संघाने कसोटी सामन्यात इंग्लंडचा "
+                    "नऊ गडी राखून पराभव केला. कर्णधाराने संघाचे कौतुक केले.")
+        assert max(p, key=p.get) == "Sports"
+        assert abs(sum(p.values()) - 1.0) < 1e-9
+
+    @NEEDS_LITE
+    def test_entity_spans_are_whole_words(self):
+        from src.lite import Lite, words
+        m = Lite.load()
+        text = "मुख्यमंत्री एकनाथ शिंदे यांनी सोमवारी मुंबईत घोषणा केली."
+        starts = {s for s, _ in words(text)}
+        ends = {e for _, e in words(text)}
+        for s, e, _ in m.entities(text):
+            assert s in starts and e in ends
+
+    @NEEDS_LITE
+    def test_pipeline_output_shape(self):
+        from src.lite import Lite, analyse
+        out = analyse(Lite.load(), "शीर्षक", "पहिले वाक्य इथे आहे. दुसरे वाक्य इथे आहे. "
+                      "तिसरे वाक्य इथे आहे. चौथे वाक्य इथे आहे.")
+        assert set(out) >= {"topic_scores", "summary", "entities", "sentiment",
+                            "polarity", "sentiment_distribution"}
+        assert out["sentiment"] in ("Positive", "Neutral", "Negative")
+
+
+class TestSummaryTies:
+    def test_exact_ties_keep_document_order(self):
+        """Repeated sentences tie exactly; the earlier one must win, so the
+        page's JavaScript port (different float rounding) agrees."""
+        from src.summarize import summarize
+        s = "हा पहिला वेगळा मुद्दा आहे."
+        dup = "सरकारने नवीन योजना जाहीर केली आहे."
+        text = " ".join([dup, s, "आणखी एक वेगळे वाक्य आहे.", dup, "शेवटचे वेगळे वाक्य आहे."])
+        # The two copies (indices 0 and 3) have identical PageRank scores.
+        for k in (1, 2, 3):
+            idx = summarize(text, k=k).indices
+            assert not (3 in idx and 0 not in idx)
+
+
+# ------------------------------------------------------------- model server
+class TestServer:
+    def test_health_and_cors_preflight(self):
+        import json as _json
+        import threading
+        import urllib.request
+        from http.server import ThreadingHTTPServer
+        from app.server import Handler
+
+        srv = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        base = f"http://127.0.0.1:{srv.server_address[1]}"
+        try:
+            with urllib.request.urlopen(base + "/api/health") as r:
+                assert _json.loads(r.read())["ok"] is True
+                assert r.headers["Access-Control-Allow-Origin"] == "*"
+            req = urllib.request.Request(base + "/api/analyse", method="OPTIONS")
+            with urllib.request.urlopen(req) as r:
+                assert r.status == 204
+                assert r.headers["Access-Control-Allow-Private-Network"] == "true"
+            req = urllib.request.Request(base + "/api/analyse", data=b'{"text": "  "}',
+                                         method="POST",
+                                         headers={"Content-Type": "application/json"})
+            try:
+                urllib.request.urlopen(req)
+                raise AssertionError("empty text should be rejected")
+            except urllib.error.HTTPError as err:
+                assert err.code == 400
+        finally:
+            srv.shutdown()
+
+
 # ------------------------------------------------------------- model-backed
 class TestModels:
     @SLOW

@@ -76,7 +76,7 @@ Optional:
 ```bash
 python scripts/train_classifier.py --epochs 3    # fine-tune your own topic head
 python scripts/evaluate.py --task all            # reproduce the tables below
-python -m pytest tests/ -q                       # 44 tests, no GPU needed
+python -m pytest tests/ -q                       # 51 tests, no GPU needed
 RUN_SLOW_TESTS=1 python -m pytest tests/ -q      # + 8 model-backed tests
 ```
 
@@ -84,6 +84,43 @@ Everything runs on CPU; a GPU only makes it faster. The device is picked
 automatically — CUDA, then Apple Silicon (MPS), then CPU — and can be forced
 with `MNIP_DEVICE=cpu`. Developed on an RTX 3050 Laptop (4 GB), which is why
 models are held in fp16 on CUDA and batches are small.
+
+---
+
+## The demo page
+
+`Marathi-NLP-Demo.html` is a single self-contained file: open it in any
+browser, paste Marathi text into any tab, and it runs.
+
+| Stage | What runs in the page |
+|---|---|
+| I, C, E | The same algorithms as `src/morph.py`, `src/retrieve.py`, `src/summarize.py`, ported to JavaScript |
+| D, F, G | Small students (`src/lite.py`) trained to imitate the MahaBERT models |
+| A | NLLB-200 itself, via transformers.js — downloaded on first use (~900 MB), then cached |
+
+The students are linear models trained on the full models' outputs over
+12,262 XL-Sum articles (`scripts/distill_label.py`, `scripts/train_lite.py`).
+How often they agree with the model they imitate, on the 1,362 held-out
+test articles:
+
+| Student | Agreement with the full model |
+|---|---|
+| Topic (12 classes) | 83.0% top-1 |
+| Sentiment | 75.7% of sentences, 73.6% of article tones |
+| Entities | span F1 0.72 (P 0.70, R 0.74) |
+
+The page shows these figures next to each result. For the full models, run
+the local server and reload the page -- it detects the server and sends
+pasted text through `src/pipeline.py` instead:
+
+```bash
+python app/server.py        # http://127.0.0.1:8765, this machine only
+```
+
+`python scripts/verify_demo.py` extracts the engine from the built page and
+checks it against the Python on 1,000 held-out articles: roots, summaries,
+topic and sentiment probabilities, entity spans and the whole pipeline are
+identical.
 
 ---
 
@@ -211,11 +248,13 @@ not the precision gain the project originally assumed.
 | System | ROUGE-1 | ROUGE-2 | ROUGE-L |
 |---|---|---|---|
 | lead-2 | 0.1045 | 0.0192 | 0.0817 |
-| **lead-2 + morph tokens** | **0.1566** | **0.0300** | **0.1199** |
-| TextRank | 0.0964 | 0.0178 | 0.0738 |
-| TextRank + morph tokens | 0.1566 | 0.0289 | 0.1134 |
+| **lead-2 + morph tokens** | 0.1566 | **0.0300** | **0.1199** |
+| TextRank | 0.0981 | 0.0184 | 0.0757 |
+| TextRank + morph tokens | **0.1588** | 0.0296 | 0.1154 |
 
-**TextRank does not beat the lead baseline.** For news this is a well-known
+**TextRank does not beat the lead baseline** on raw ROUGE, and on normalised
+tokens it edges ahead only on ROUGE-1 (by 0.002) while trailing on ROUGE-2
+and ROUGE-L -- effectively a tie. For news this is a well-known
 and unsurprising outcome — journalists front-load the important facts — and
 the lead baseline is reported here precisely so the comparison is not
 flattering. Absolute ROUGE is low because XL-Sum summaries are abstractive
@@ -326,14 +365,25 @@ src/
   retrieve.py              (C) BM25 + dense + RRF
   ingest.py                live RSS ingestion with article-body extraction
   pipeline.py              per-document orchestrator
+  lite.py                  in-browser student models (D, F, G) for the demo page
 scripts/
   download_data.py         fetch XL-Sum + MahaNews
   build_corpus.py          enrich articles → corpus.jsonl
   build_index.py           build BM25 (+ plain ablation) and dense indexes
   train_classifier.py      fine-tune MahaBERT on MahaNews
   evaluate.py              all experiments + Marathi-aware ROUGE
-app/dashboard.py           Streamlit UI (search, overview, entity tone, morphology, live)
-tests/test_pipeline.py     44 fast tests + 8 model-backed
+  distill_label.py         label XL-Sum with the full models (student targets)
+  train_lite.py            train + score the students -> app/lite_models.json
+  export_demo.py           demo page data: corpus sample, examples, weights
+  build_demo_page.py       assemble Marathi-NLP-Demo.html
+  verify_demo.py           JavaScript vs Python parity check
+app/
+  dashboard.py             Streamlit UI (search, overview, entity tone, morphology, live)
+  server.py                local model server used by the demo page
+  demo_template.html       demo page layout
+  demo_engine.js           demo page NLP engine (port of I, C, E + students)
+  lite_models.json         student weights
+tests/test_pipeline.py     51 fast tests + 8 model-backed
 ```
 
 Every module runs standalone for inspection:

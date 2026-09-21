@@ -152,8 +152,53 @@
     padding-left:12px;margin-top:10px}
   footer{padding-block:0 40px;color:var(--ink-mute);font-size:.8rem}
   @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  /* ---- pasted-text additions ---- */
+  textarea{font-family:var(--deva);font-size:1.05rem;line-height:1.8;width:100%;
+    padding:11px 14px;border:1px solid var(--line);border-radius:8px;
+    background:var(--bg);color:var(--ink);resize:vertical}
+  textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+  #mword{font-size:1.25rem;line-height:1.6}
+  .fld{margin-top:14px}
+  .fld:first-child{margin-top:0}
+  .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px}
+  .btn{font-family:var(--sans);font-size:.9rem;font-weight:500;padding:8px 16px;
+    border-radius:8px;border:1px solid var(--line);background:var(--card);
+    color:var(--ink);cursor:pointer}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{filter:brightness(1.08);color:#fff}
+  .btn:disabled{opacity:.55;cursor:default}
+  .status{font-size:.85rem;color:var(--ink-soft)}
+  .status.err{color:var(--neg)}
+  .mode{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);
+    font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;padding:3px 10px;
+    border-radius:99px;background:var(--neu-bg);color:var(--ink-soft)}
+  .mode.full{background:var(--pos-bg);color:var(--pos)}
+  .mode::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+  .src{margin-left:auto;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--ink-mute)}
+  .cmp{font-size:.8rem;color:var(--ink-mute);margin-top:10px}
+  .mtable{width:100%;border-collapse:collapse;margin-top:16px;font-size:.9rem}
+  .mtable th{font-family:var(--mono);font-size:.62rem;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--ink-mute);text-align:left;font-weight:500;
+    padding:6px 8px;border-bottom:1px solid var(--line)}
+  .mtable td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  .mtable td.d{font-family:var(--deva)}
+  .mtable td.r{font-family:var(--deva);color:var(--accent);font-weight:500}
+  .mtable td.f{font-family:var(--mono);font-size:.68rem;color:var(--ink-mute)}
+  .tblwrap{max-height:360px;overflow:auto}
+  .stats{display:flex;gap:22px;flex-wrap:wrap;margin-top:16px}
+  .stat b{display:block;font-family:var(--mono);font-size:1.3rem;font-weight:500;color:var(--accent)}
+  .stat span{font-size:.78rem;color:var(--ink-mute)}
+  details.add{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+  details.add summary{cursor:pointer;font-size:.9rem;color:var(--accent);font-weight:500}
+  .mine{color:var(--accent)}
+  .sentl{list-style:none;padding:0;margin:12px 0 0}
+  .sentl li{display:flex;gap:10px;align-items:baseline;padding:5px 0;
+    border-top:1px solid var(--line);font-family:var(--deva);font-size:.9rem;line-height:1.7}
+  .sentl .tone{flex:none}
+  code{font-family:var(--mono);font-size:.85em;background:var(--soft);padding:1px 5px;border-radius:4px}
 </style>
-
 </head>
 <body>
 
@@ -165,7 +210,7 @@
     <h1>News Intelligence</h1>
     <span class="meta" id="meta"></span>
   </div>
-  <p>A Marathi news article goes in &mdash; category, summary, entities, sentiment,
+  <p>Paste any Marathi news text &mdash; category, summary, entities, sentiment,
      English translation and search come out.</p>
 
   <div class="tabs" role="tablist">
@@ -178,11 +223,12 @@
 <div class="wrap panelwrap">
 
   <div id="p0" role="tabpanel" aria-labelledby="t0">
-    <p class="lead">Marathi joins a whole phrase into one word. Type any Marathi word
-      &mdash; the analyser strips the suffix chain back to its root, live.</p>
+    <p class="lead">Marathi joins a whole phrase into one word. Type a word, or paste
+      a whole sentence or article &mdash; the analyser strips each word's suffix chain
+      back to its root, live.</p>
     <div class="card">
-      <label class="fl" for="mword">Marathi word</label>
-      <input type="text" id="mword" value="घरांमधून" spellcheck="false">
+      <label class="fl" for="mword">Marathi word or text</label>
+      <textarea id="mword" rows="2" spellcheck="false">घरांमधून</textarea>
       <div class="chips" id="mchips"></div>
       <div id="mout"></div>
     </div>
@@ -190,8 +236,9 @@
   </div>
 
   <div id="p1" role="tabpanel" aria-labelledby="t1" hidden>
-    <p class="lead">Two real search indexes over the same 400 articles, built in your
-      browser. The only difference is whether words pass through the analyser first.</p>
+    <p class="lead">Two real search indexes over the same <span id="ndocs">400</span>
+      articles, built in your browser. The only difference is whether words pass
+      through the analyser first. Type or paste any query.</p>
     <div class="card">
       <label class="fl" for="q">Search query</label>
       <input type="text" id="q" value="न्यायालय" spellcheck="false">
@@ -207,29 +254,59 @@
         </div>
       </div>
       <div class="note" id="qnote"></div>
+      <details class="add">
+        <summary>Add your own articles to the index</summary>
+        <div class="fld"><label class="fl" for="atitle">Headline</label>
+          <input type="text" id="atitle" spellcheck="false"></div>
+        <div class="fld"><label class="fl" for="atext">Marathi article text</label>
+          <textarea id="atext" rows="5" spellcheck="false"></textarea></div>
+        <div class="actions"><button class="btn primary" type="button" id="aadd">Add to both indexes</button>
+          <span class="status" id="astatus"></span></div>
+      </details>
     </div>
   </div>
 
   <div id="p2" role="tabpanel" aria-labelledby="t2" hidden>
-    <p class="lead">Pick an article. Everything below is real output from the models.</p>
-    <div class="card" style="padding:15px">
-      <label class="fl" for="pick">Article</label>
-      <select id="pick"></select>
+    <p class="lead">Paste any Marathi article, or start from an example, then press
+      <b>Analyse</b>. It runs in your browser; if the local model server is running
+      (<code>python app/server.py</code>) it uses the full models instead.</p>
+    <div class="card">
+      <div class="fld"><label class="fl" for="pick">Start from an example</label>
+        <select id="pick"></select></div>
+      <div class="fld"><label class="fl" for="ptitle">Headline (optional)</label>
+        <input type="text" id="ptitle" spellcheck="false"></div>
+      <div class="fld"><label class="fl" for="ptext">Marathi article text</label>
+        <textarea id="ptext" rows="8" spellcheck="false"></textarea></div>
+      <div class="actions">
+        <button class="btn primary" type="button" id="run">Analyse</button>
+        <button class="btn" type="button" id="clear">Clear</button>
+        <span class="mode" id="mode">In-browser models</span>
+        <span class="status" id="runnote"></span>
+      </div>
     </div>
     <div id="artview"></div>
   </div>
 
 </div>
 
-<footer class="wrap">Data: XL-Sum Marathi (BBC Marathi). Models: L3Cube-MahaNLP, NLLB-200.</footer>
+<footer class="wrap">Data: XL-Sum Marathi (BBC Marathi). Models: L3Cube-MahaNLP, NLLB-200.
+  In-browser models are small students trained to imitate the full models; run
+  <code>python app/server.py</code> to analyse with the full models.</footer>
 
+<script>
+/*__ENGINE__*/
+</script>
 <script>
 (function(){
   "use strict";
   const DATA = JSON.parse(document.getElementById("payload").textContent);
-  const M = DATA.morph;
+  const E = makeEngine(DATA);
+  const AG = DATA.lite.agreement;
+  const SERVER = "http://127.0.0.1:8765";
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+  const pct = v => (v*100).toFixed(1) + "%";
+  const hasDeva = t => /[ऀ-ॿ]/.test(t || "");
 
   /* ---- tabs ---- */
   const tabs = [...document.querySelectorAll(".tab")];
@@ -240,95 +317,14 @@
       document.getElementById(o.getAttribute("aria-controls")).hidden = !on;
     });
   }));
-
-  /* ================= analyser (port of src/morph.py) ================= */
-  const MARKS = new Set(Array.from(M.marks));
-  const FINAL = new Set(Array.from(M.finalMatras));
-  const STOP = new Set(M.stopwords);
-  const byLen = t => t.slice().sort((a,b)=> b[0].length - a[0].length);
-  const LAYERS = [byLen(M.clitics), byLen(M.postpositions), byLen(M.verb), byLen(M.case)];
-  const aksh = s => { let n=0; for(const c of s) if(!MARKS.has(c)) n++; return n; };
-
-  function restore(s){
-    while(s.endsWith(M.virama)) s = s.slice(0,-1);
-    if(s && FINAL.has(s[s.length-1]) && aksh(s) >= M.minStem) s = s.slice(0,-1);
-    return s;
-  }
-  function strip1(w){
-    for(const table of LAYERS) for(const [suf,feat,repl] of table){
-      if(!w.endsWith(suf)) continue;
-      const c = w.slice(0, w.length-suf.length) + repl;
-      if(aksh(c) >= M.minStem) return [c,suf,feat];
-    }
-    return null;
-  }
-  const cache = new Map();
-  function analyse(word){
-    if(cache.has(word)) return cache.get(word);
-    let w = word.normalize("NFC"), res;
-    if(Object.prototype.hasOwnProperty.call(M.exceptions, word)){
-      res = {root:M.exceptions[word], features:[], stripped:[]};
-    } else {
-      const features=[], stripped=[];
-      for(let i=0;i<M.maxStrips;i++){
-        const h = strip1(w); if(!h) break;
-        w = h[0]; stripped.push(h[1]); features.push(h[2]);
-      }
-      res = {root:restore(w), features, stripped};
-    }
-    cache.set(word,res); return res;
-  }
-  const stem = w => analyse(w).root;
-  const tokenize = t => (t||"").match(/[\u0900-\u097F]+|[A-Za-z]+|\d+/g) || [];
-  function normTokens(text, useMorph){
-    const out=[];
-    for(const tok of tokenize(text)){
-      if(STOP.has(tok)) continue;
-      const t = useMorph ? stem(tok) : tok;
-      if(STOP.has(t)) continue;
-      if(aksh(t) >= M.minStem || /^[\x00-\x7F]+$/.test(t)) out.push(t);
-    }
-    return out;
-  }
-
-  /* ================= BM25 (port of src/retrieve.py) ================= */
-  const K1=1.5, B=0.75;
-  function build(texts, useMorph){
-    const postings = new Map(), len=[];
-    texts.forEach((txt,i)=>{
-      const toks = normTokens(txt,useMorph); len.push(toks.length);
-      const tf = new Map();
-      for(const t of toks) tf.set(t,(tf.get(t)||0)+1);
-      for(const [t,f] of tf){ if(!postings.has(t)) postings.set(t,[]); postings.get(t).push([i,f]); }
-    });
-    const avg = len.length ? len.reduce((a,b)=>a+b,0)/len.length : 0;
-    return {postings,len,avg,n:texts.length};
-  }
-  function search(idx,q,useMorph,topK){
-    const sc = new Float64Array(idx.n);
-    for(const term of normTokens(q,useMorph)){
-      const p = idx.postings.get(term); if(!p) continue;
-      const idf = Math.max(Math.log((idx.n-p.length+0.5)/(p.length+0.5)+1),0);
-      for(const [d,f] of p){
-        const dn = f + K1*(1-B+B*idx.len[d]/Math.max(idx.avg,1e-9));
-        sc[d] += idf*(f*(K1+1))/Math.max(dn,1e-9);
-      }
-    }
-    const hits=[]; for(let i=0;i<idx.n;i++) if(sc[i]>0) hits.push([i,sc[i]]);
-    hits.sort((a,b)=>b[1]-a[1]);
-    return topK ? hits.slice(0,topK) : hits;
-  }
-
-  /* ================= tab 1 ================= */
   $("#meta").textContent = DATA.meta.corpus_size.toLocaleString() + " articles processed";
 
+  /* ================= tab 1: morphology ================= */
   const WORDS = ["घरांमधून","शाळेतून","न्यायालयाने","मुलांना","पुण्यातील","विद्यार्थ्यांसाठी","जिंकले","मुंबईपासून"];
   $("#mchips").innerHTML = WORDS.map(w=>`<button class="chip" type="button" data-w="${esc(w)}">${esc(w)}</button>`).join("");
 
-  function renderMorph(word){
-    word=(word||"").trim();
-    if(!word){ $("#mout").innerHTML=`<div class="note">Type a Marathi word above.</div>`; return; }
-    const a = analyse(word);
+  function gloss(word){
+    const a = E.analyse(word);
     const segs=[`<div class="mb root"><span class="seg">${esc(a.root)}</span><span class="feat">root</span></div>`];
     for(let i=a.stripped.length-1;i>=0;i--){
       segs.push(`<span class="plus">+</span>`);
@@ -337,9 +333,40 @@
     const note = a.stripped.length
       ? `Every form of this word now indexes under one term: <b>${esc(a.root)}</b>.`
       : `<b>${esc(word)}</b> carries no suffix &mdash; it is already a root.`;
-    $("#mout").innerHTML = `<div class="gloss">${segs.join("")}</div><div class="note">${note}</div>`;
+    return `<div class="gloss">${segs.join("")}</div><div class="note">${note}</div>`;
+  }
+  function textAnalysis(toks){
+    const seen = new Map();
+    for(const t of toks) seen.set(t,(seen.get(t)||0)+1);
+    const rows = [...seen.keys()].map(w=>[w,E.analyse(w)]);
+    const inflected = toks.filter(t=>E.analyse(t).stripped.length).length;
+    const roots = new Set(rows.map(([,a])=>a.root));
+    const shown = rows.slice(0,300);
+    return `<div class="stats">
+        <div class="stat"><b>${toks.length}</b><span>words</span></div>
+        <div class="stat"><b>${pct(inflected/toks.length)}</b><span>carry a suffix</span></div>
+        <div class="stat"><b>${seen.size} → ${roots.size}</b><span>distinct forms → roots</span></div>
+      </div>
+      <div class="tblwrap"><table class="mtable">
+        <thead><tr><th>Word</th><th>Root</th><th>Suffixes stripped</th><th>Grammar</th></tr></thead>
+        <tbody>${shown.map(([w,a])=>`<tr><td class="d">${esc(w)}</td><td class="r">${esc(a.root)}</td>
+          <td class="d">${a.stripped.length?a.stripped.slice().reverse().map(esc).join(" + ")
+            :a.root===w?"&mdash;":`<span class="cmp">${Object.prototype.hasOwnProperty.call(DATA.morph.exceptions,w)?"exception list":"final vowel normalised"}</span>`}</td>
+          <td class="f">${a.features.length?a.features.slice().reverse().map(esc).join(" + "):""}</td></tr>`).join("")}</tbody>
+      </table></div>
+      ${rows.length>shown.length?`<div class="cmp">Showing the first ${shown.length} of ${rows.length} distinct words.</div>`:""}`;
+  }
+  function renderMorph(text){
+    text = (text||"").trim();
+    const toks = E.tokenize(text).filter(hasDeva);
+    let html;
+    if(!text) html = `<div class="note">Type a Marathi word, or paste some Marathi text.</div>`;
+    else if(!toks.length) html = `<div class="note">No Marathi (Devanagari) words found in that text.</div>`;
+    else if(toks.length===1) html = gloss(toks[0]);
+    else html = textAnalysis(toks);
+    $("#mout").innerHTML = html;
     document.querySelectorAll("#mchips .chip").forEach(c=>
-      c.setAttribute("aria-pressed", String(c.dataset.w===word)));
+      c.setAttribute("aria-pressed", String(c.dataset.w===text)));
   }
   $("#mword").addEventListener("input", e=>renderMorph(e.target.value));
   $("#mchips").addEventListener("click", e=>{
@@ -351,15 +378,20 @@
   const FAMS = [["घर","घरात","घरातून","घरांमधून"],["शाळा","शाळेत","शाळेतून","शाळांना"],
                 ["मुंबई","मुंबईत","मुंबईतील","मुंबईपासून"]];
   $("#fams").innerHTML = FAMS.map(g=>{
-    const r=[...new Set(g.map(stem))];
+    const r=[...new Set(g.map(E.stem))];
     return `<div class="fam"><div class="f">${g.map(esc).join("&nbsp;·&nbsp;")}</div>
       <div class="r">${r.map(esc).join(" / ")}</div></div>`;
   }).join("");
 
-  /* ================= tab 2 ================= */
-  const DOCS = DATA.docs;
-  const texts = DOCS.map(d=>`${d.title} ${d.summary}`);
-  const iA = build(texts,false), iB = build(texts,true);
+  /* ================= tab 2: search ================= */
+  const DOCS = DATA.docs.slice();
+  let iA, iB;
+  function reindex(){
+    const texts = DOCS.map(d=>`${d.title} ${d.summary}`);
+    iA = E.buildIndex(texts,false); iB = E.buildIndex(texts,true);
+    $("#ndocs").textContent = DOCS.length.toLocaleString();
+  }
+  reindex();
 
   const QS = ["न्यायालय","सरकार","महिला","शाळा","पोलीस","पाऊस"];
   $("#qchips").innerHTML = QS.map(q=>`<button class="chip" type="button" data-q="${esc(q)}">${esc(q)}</button>`).join("");
@@ -370,19 +402,20 @@
       ? hits.slice(0,10).map(([i,s])=>{
           const d=DOCS[i];
           return `<div class="res"><span class="t">${esc(d.title)}</span>
-            <span class="m">${esc(d.topic)} · score ${s.toFixed(2)}</span></div>`;
+            <span class="m">${d.mine?'<span class="mine">your article</span> · ':""}${esc(d.topic)} · score ${s.toFixed(2)}</span></div>`;
         }).join("")
       : `<div class="none"><b>0</b>No documents matched.</div>`;
   }
   function runSearch(q){
     q=(q||"").trim();
-    const ha = q?search(iA,q,false,50):[], hb = q?search(iB,q,true,50):[];
+    const ha = q?E.search(iA,q,50):[], hb = q?E.search(iB,q,50):[];
     side("#r-a","#c-a",ha); side("#r-b","#c-b",hb);
     const d = hb.length-ha.length;
     let v;
-    if(!q) v="Type a query above.";
+    if(!q) v="Type or paste a query above.";
+    else if(!hasDeva(q)) v="Try a Marathi (Devanagari) query &mdash; the analyser only changes Marathi words.";
     else if(d>0) v=`Morphology found <b>${d} more</b> article${d===1?"":"s"} the plain index cannot reach.`;
-    else if(d===0) v=`<b>No difference for this word</b> &mdash; the articles happen to use it in the same form as the query.`;
+    else if(d===0) v=`<b>No difference for this query</b> &mdash; the articles happen to use it in the same form.`;
     else v=`Plain found ${-d} more here &mdash; over-stemming can merge distinct words.`;
     $("#qnote").innerHTML = v;
     document.querySelectorAll("#qchips .chip").forEach(c=>
@@ -395,57 +428,266 @@
   });
   runSearch($("#q").value);
 
-  /* ================= tab 3 ================= */
+  $("#aadd").addEventListener("click", ()=>{
+    const title = $("#atitle").value.trim(), text = $("#atext").value.trim();
+    if(!text){ $("#astatus").textContent = "Paste some article text first."; return; }
+    const scores = E.topic(title, text);
+    const topic = Object.entries(scores).sort((a,b)=>b[1]-a[1])[0][0];
+    DOCS.push({title: title || text.slice(0,70) + (text.length>70?"…":""), summary: text, topic, mine: true});
+    reindex();
+    const mine = DOCS.filter(d=>d.mine).length;
+    $("#astatus").textContent = `Added as ${topic}. Your articles in the index: ${mine}.`;
+    $("#atitle").value = ""; $("#atext").value = "";
+    runSearch($("#q").value);
+  });
+
+  /* ================= local model server ================= */
+  let server = false;
+  async function detectServer(){
+    try{
+      const r = await fetch(SERVER + "/api/health", {signal: AbortSignal.timeout(900)});
+      server = r.ok && (await r.json()).ok === true;
+    }catch(_){ server = false; }
+    const m = $("#mode");
+    m.textContent = server ? "Full models · local server" : "In-browser models";
+    m.classList.toggle("full", server);
+    return server;
+  }
+  async function post(path, body){
+    const r = await fetch(SERVER + path, {method:"POST",
+      headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
+    const j = await r.json();
+    if(!r.ok || j.error) throw new Error(j.error || ("HTTP " + r.status));
+    return j;
+  }
+
+  /* ================= in-browser translation (NLLB-200) ================= */
+  const WORKER_SRC = `
+    import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
+    env.allowLocalModels = false;
+    let tr = null;
+    self.onmessage = async (e) => {
+      const { texts } = e.data;
+      try {
+        if (!tr) {
+          const files = {};
+          tr = await pipeline("translation", "Xenova/nllb-200-distilled-600M", {
+            dtype: "q8",
+            progress_callback: (p) => {
+              if (p.status === "progress" && p.total) {
+                files[p.file] = [p.loaded, p.total];
+                let l = 0, t = 0;
+                for (const [a, b] of Object.values(files)) { l += a; t += b; }
+                self.postMessage({ type: "download", loaded: l, total: t });
+              }
+            },
+          });
+        }
+        const out = [];
+        for (let i = 0; i < texts.length; i++) {
+          self.postMessage({ type: "step", i, n: texts.length });
+          const r = await tr(texts[i], { src_lang: "mar_Deva", tgt_lang: "eng_Latn", max_new_tokens: 256 });
+          out.push(r[0].translation_text);
+        }
+        self.postMessage({ type: "done", out });
+      } catch (err) {
+        self.postMessage({ type: "error", message: String((err && err.message) || err) });
+      }
+    };`;
+  let worker = null;
+  function browserTranslate(texts, onStatus){
+    return new Promise((resolve, reject)=>{
+      if(!worker){
+        const url = URL.createObjectURL(new Blob([WORKER_SRC], {type:"text/javascript"}));
+        worker = new Worker(url, {type:"module"});
+      }
+      worker.onmessage = e=>{
+        const m = e.data;
+        if(m.type==="download") onStatus(`Downloading the translation model (once, then cached): ${(m.loaded/1e6).toFixed(0)} / ${(m.total/1e6).toFixed(0)} MB`);
+        else if(m.type==="step") onStatus(`Translating sentence ${m.i+1} of ${m.n}…`);
+        else if(m.type==="done") resolve(m.out);
+        else if(m.type==="error") reject(new Error(m.message));
+      };
+      worker.onerror = e=>{ worker = null; reject(new Error(e.message || "worker failed to start")); };
+      worker.postMessage({texts});
+    });
+  }
+
+  /* ================= tab 3: full pipeline ================= */
   const SHOW = DATA.showcase;
-  $("#pick").innerHTML = SHOW.map((d,i)=>
+  $("#pick").innerHTML = `<option value="">— paste your own below —</option>` + SHOW.map((d,i)=>
     `<option value="${i}">${esc(d.topic)} — ${esc(d.title.slice(0,70))}</option>`).join("");
 
-  const ORDER = ["Person","Organization","Location","Date"];
-  function renderArticle(i){
-    const d = SHOW[i];
+  let current = null;   // {result, mode, example}
+
+  function stageHead(badge, name, src){
+    return `<div class="stage-h"><span class="bdg">${badge}</span><span class="stage-n">${name}</span>${src?`<span class="src">${src}</span>`:""}</div>`;
+  }
+  const liteTag = (key, what) => `in-browser · ${pct(AG[key])} ${what}`;
+
+  function render(){
+    const {result: d, mode, example: ex} = current;
+    const full = mode === "full";
     const top = Object.entries(d.topic_scores||{}).sort((a,b)=>b[1]-a[1]).slice(0,3);
     const dist = d.sentiment_distribution||{};
     const tot = Math.max(Object.values(dist).reduce((a,b)=>a+b,0),1);
+    const ORDER = ["Person","Organization","Location","Date","Designation","Time","Measure"];
     const ents = ORDER.filter(k=>(d.entities||{})[k]&&d.entities[k].length);
+    const same = ex && d.summary === ex.summary;
+
+    let cmpTopic = "";
+    if(!full && ex){
+      const t = Object.entries(ex.topic_scores||{}).sort((a,b)=>b[1]-a[1])[0];
+      if(t) cmpTopic = `<div class="cmp">Full model on this article: <b>${esc(t[0])}</b> (${pct(t[1])}).</div>`;
+    }
+
+    const sentList = (d.sentence_sentiment||[]).length
+      ? `<ul class="sentl">${d.sentence_sentiment.map(s=>`<li><span class="tone ${esc(s.label)}">${esc(s.label)}</span><span>${esc(s.text)}</span></li>`).join("")}</ul>` : "";
+
+    let trBody;
+    if(d.title_en || d.summary_en){
+      trBody = `${d.title_en?`<div style="font-weight:500">${esc(d.title_en)}</div>`:""}
+        <div class="en">${esc(d.summary_en||"")}</div>
+        <div class="cmp">${esc(d.translation_source||"")}</div>`;
+    } else {
+      trBody = `<div class="actions" style="margin-top:0">
+          <button class="btn" type="button" id="trbtn">Translate to English</button>
+          <span class="status" id="trstatus">${full?"Uses NLLB-200 on the local server."
+            :"Runs NLLB-200 in your browser. The first time it downloads the model (~900 MB, needs internet); after that it is cached."}</span>
+        </div>`;
+    }
 
     $("#artview").innerHTML = `
-      <div class="stage"><div class="stage-h"><span class="bdg">·</span><span class="stage-n">Input article</span></div>
-        <div class="stage-b"><div class="deva" style="font-size:1.05rem;font-weight:500">${esc(d.title)}</div>
-        <div class="en">${esc(d.title_en)}</div></div></div>
+      <div class="stage">${stageHead("·","Input article")}
+        <div class="stage-b">${d.title?`<div class="deva" style="font-size:1.05rem;font-weight:500">${esc(d.title)}</div>`:""}
+        <div class="cmp">${d.tokens} words · ${pct(d.inflected_ratio||0)} carry a suffix the analyser (I) strips</div></div></div>
 
-      <div class="stage"><div class="stage-h"><span class="bdg">D</span><span class="stage-n">Category</span></div>
+      <div class="stage">${stageHead("D","Category", full?"full model":liteTag("topic_top1_agreement","agreement"))}
         <div class="stage-b">${top.map(([k,v],j)=>`
           <div style="margin-bottom:${j===top.length-1?0:9}px">
-            <div class="kv"><span${j===0?' style="font-weight:500"':''}>${esc(k)}</span><span class="v">${(v*100).toFixed(1)}%</span></div>
+            <div class="kv"><span${j===0?' style="font-weight:500"':''}>${esc(k)}</span><span class="v">${pct(v)}</span></div>
             <div class="bar"><i style="width:${(v*100).toFixed(1)}%;opacity:${j===0?1:.35}"></i></div>
-          </div>`).join("")}</div></div>
+          </div>`).join("")}${cmpTopic}</div></div>
 
-      <div class="stage"><div class="stage-h"><span class="bdg">E</span><span class="stage-n">Summary</span></div>
-        <div class="stage-b"><div class="deva" style="font-size:.96rem">${esc(d.summary)}</div>
-        <div class="en">${esc(d.summary_en)}</div></div></div>
+      <div class="stage">${stageHead("E","Summary","TextRank · same algorithm as Python")}
+        <div class="stage-b"><div class="deva" style="font-size:.96rem">${d.summary?esc(d.summary):'<span style="color:var(--ink-mute)">Too short to summarise &mdash; paste at least a few sentences.</span>'}</div></div></div>
 
-      <div class="stage"><div class="stage-h"><span class="bdg">G</span><span class="stage-n">Entities</span></div>
+      <div class="stage">${stageHead("G","Entities", full?"full model":`in-browser · F1 ${AG.ner_f1.toFixed(2)} vs full model`)}
         <div class="stage-b">${ents.map(k=>`<div class="lab">${esc(k)}</div>
-          <div class="ents">${d.entities[k].slice(0,7).map(v=>`<span class="ent">${esc(v)}</span>`).join("")}</div>`).join("")
+          <div class="ents">${d.entities[k].slice(0,8).map(v=>`<span class="ent">${esc(v)}</span>`).join("")}</div>`).join("")
           || '<span style="color:var(--ink-mute);font-size:.9rem">None found.</span>'}</div></div>
 
-      <div class="stage"><div class="stage-h"><span class="bdg">F</span><span class="stage-n">Sentiment</span></div>
+      <div class="stage">${stageHead("F","Sentiment", full?"full model":liteTag("sentiment_document_agreement","agreement"))}
         <div class="stage-b">
           <span class="tone ${esc(d.sentiment)}">${esc(d.sentiment)}</span>
+          <span style="font-family:var(--mono);font-size:.7rem;color:var(--ink-mute);margin-left:8px">polarity ${(d.polarity||0).toFixed(2)}</span>
           <div class="stack">
             <i style="width:${(dist.Positive||0)/tot*100}%;background:var(--pos)"></i>
             <i style="width:${(dist.Neutral||0)/tot*100}%;background:var(--neu)"></i>
             <i style="width:${(dist.Negative||0)/tot*100}%;background:var(--neg)"></i>
           </div>
           <div style="font-family:var(--mono);font-size:.66rem;color:var(--ink-mute);margin-top:6px">
-            ${dist.Positive||0} positive · ${dist.Neutral||0} neutral · ${dist.Negative||0} negative sentences</div>
+            ${dist.Positive||0} positive · ${dist.Neutral||0} neutral · ${dist.Negative||0} negative sentences in the summary</div>
+          ${sentList}
         </div></div>
 
-      <div class="stage"><div class="stage-h"><span class="bdg">A</span><span class="stage-n">English translation</span></div>
-        <div class="stage-b" style="font-size:.95rem;color:var(--ink-soft)">${esc(d.summary_en)}</div></div>`;
+      <div class="stage">${stageHead("A","English translation", full?"NLLB-200 · local server":"NLLB-200")}
+        <div class="stage-b" style="font-size:.95rem;color:var(--ink-soft)">${trBody}</div></div>`;
+
+    const btn = $("#trbtn");
+    if(btn) btn.addEventListener("click", ()=>translate(btn));
+    if(!full && same && ex.summary_en && !d.title_en && !d.summary_en){
+      // An unedited example: the saved NLLB output for exactly this summary.
+      const s = $("#trstatus");
+      if(s) s.insertAdjacentHTML("afterend", `<button class="btn" type="button" id="trsaved">Show saved translation</button>`);
+      const b2 = $("#trsaved");
+      if(b2) b2.addEventListener("click", ()=>{
+        d.title_en = ex.title_en; d.summary_en = ex.summary_en;
+        d.translation_source = "Saved NLLB-200 output for this example.";
+        render();
+      });
+    }
   }
-  $("#pick").addEventListener("change", e=>renderArticle(+e.target.value));
-  renderArticle(0);
+
+  async function translate(btn){
+    const d = current.result, st = $("#trstatus");
+    const set = (t, err) => { if(st){ st.textContent = t; st.classList.toggle("err", !!err); } };
+    const sents = E.sentTokenize(d.summary).slice(0,12);
+    const texts = [...(d.title?[d.title]:[]), ...sents];
+    if(!texts.length){ set("Nothing to translate yet.", true); return; }
+    btn.disabled = true;
+    try{
+      let out, source;
+      if(await detectServer()){
+        set("Translating on the local server…");
+        out = (await post("/api/translate", {texts})).translations;
+        source = "NLLB-200 on the local server.";
+      } else {
+        set("Loading the translation model…");
+        out = await browserTranslate(texts, set);
+        source = "NLLB-200, run in your browser.";
+      }
+      if(current.result !== d) return;
+      d.title_en = d.title ? out[0] : "";
+      d.summary_en = (d.title ? out.slice(1) : out).join(" ");
+      d.translation_source = source;
+      render();
+    }catch(err){
+      btn.disabled = false;
+      set("Translation failed: " + err.message + " — the first run needs an internet connection.", true);
+    }
+  }
+
+  async function analyse(){
+    const title = $("#ptitle").value.trim(), text = $("#ptext").value.trim();
+    const note = $("#runnote");
+    note.classList.remove("err");
+    if(!text){ note.textContent = "Paste some Marathi article text first."; note.classList.add("err"); return; }
+    if(!hasDeva(text)){ note.textContent = "That doesn't look like Marathi (Devanagari) text."; note.classList.add("err"); return; }
+    const exIdx = $("#pick").value;
+    const ex = exIdx !== "" && SHOW[+exIdx].text === text && SHOW[+exIdx].title === title ? SHOW[+exIdx] : null;
+    $("#run").disabled = true;
+    let result, mode = "lite";
+    try{
+      if(await detectServer()){
+        note.textContent = "Running the full models on the local server…";
+        try{
+          const r = await post("/api/analyse", {title, text, translate:false});
+          result = {title, topic_scores:r.topic_scores, summary:r.summary, entities:r.entities,
+            sentiment:r.sentiment, polarity:r.polarity, sentiment_distribution:r.sentiment_distribution,
+            tokens:r.tokens, inflected_ratio:r.inflected_ratio};
+          mode = "full";
+        }catch(err){
+          note.textContent = "Local server failed (" + err.message + "); used the in-browser models.";
+        }
+      }
+      if(!result){
+        result = E.pipeline(title, text);
+        if(mode === "lite" && !note.textContent.startsWith("Local server")) note.textContent = "";
+      } else note.textContent = "";
+      current = {result, mode, example: ex};
+      render();
+    } finally {
+      $("#run").disabled = false;
+    }
+  }
+
+  function loadExample(i){
+    const d = SHOW[i];
+    $("#ptitle").value = d.title; $("#ptext").value = d.text;
+    analyse();
+  }
+  $("#pick").addEventListener("change", e=>{ if(e.target.value !== "") loadExample(+e.target.value); });
+  $("#run").addEventListener("click", analyse);
+  $("#clear").addEventListener("click", ()=>{
+    $("#ptitle").value = ""; $("#ptext").value = ""; $("#pick").value = "";
+    $("#artview").innerHTML = ""; $("#runnote").textContent = ""; current = null;
+    $("#ptext").focus();
+  });
+  $("#ptext").addEventListener("keydown", e=>{ if((e.metaKey||e.ctrlKey) && e.key==="Enter") analyse(); });
+
+  $("#pick").value = "0";
+  loadExample(0);
 })();
 </script>
 </body>

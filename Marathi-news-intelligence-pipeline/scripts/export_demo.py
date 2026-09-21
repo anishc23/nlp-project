@@ -33,6 +33,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 import config                       # noqa: E402
 from src import morph               # noqa: E402
+from src.lite import LITE_MODELS    # noqa: E402
 from src.ner import merge_aliases   # noqa: E402
 
 
@@ -112,6 +113,8 @@ def main():
     ap.add_argument("--out", default=str(config.OUTPUTS / "demo_data.json"))
     args = ap.parse_args()
 
+    if not LITE_MODELS.exists():
+        sys.exit(f"{LITE_MODELS} missing -- run scripts/train_lite.py first")
     corpus = [json.loads(l) for l in open(config.CORPUS_JSONL, encoding="utf-8")]
     print(f"corpus: {len(corpus)} docs")
 
@@ -187,6 +190,9 @@ def main():
         "sentiment": Counter(r.get("sentiment", "?") for r in corpus).most_common(),
         "tone_by_topic": {k: dict(v) for k, v in tone_by_topic.items()},
         "top_entities": top_entities,
+        # The in-browser students (src/lite.py), so pasted text can be
+        # analysed with no Python -- with their measured agreement.
+        "lite": json.loads(LITE_MODELS.read_text(encoding="utf-8")),
     }
 
     out = Path(args.out)
