@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Downloaded corpora and derived artefacts
+data/raw/*
+data/processed/*
+data/index/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/index/.gitkeep
+
+# Fine-tuned checkpoints (hundreds of MB)
+models/
+
+# Build artefacts: the shipped copy is Marathi-NLP-Demo.html at the root
+outputs/
+.pytest_cache/
+.ipynb_checkpoints/

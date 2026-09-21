@@ -1,0 +1,17 @@
+# Core ML stack. Install torch first, matched to your CUDA version:
+#   https://pytorch.org/get-started/locally/
+torch>=2.2
+transformers>=4.40
+sentencepiece>=0.2          # NLLB / ALBERT tokenizers
+huggingface_hub>=0.23
+
+# Data, metrics, app
+numpy>=1.26
+pandas>=2.0
+pyarrow>=15.0               # MahaNews parquet
+scikit-learn>=1.4           # classification_report / confusion_matrix
+streamlit>=1.30
+beautifulsoup4>=4.12        # RSS article-body extraction
+
+# Tests
+pytest>=8.0

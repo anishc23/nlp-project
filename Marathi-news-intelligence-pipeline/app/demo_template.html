@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marathi News Intelligence</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Tiro+Devanagari+Marathi&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Light, single-theme palette. Every colour is declared here. */
+  :root{
+    --bg:#f6f9fa; --card:#ffffff; --soft:#eef4f5; --line:#dde7ea;
+    --ink:#1e3238; --ink-soft:#5b757d; --ink-mute:#8ca3a9;
+    --accent:#1f7d7d; --accent-soft:#e2f2f1;
+    --pos:#37785a; --pos-bg:#e6f3ec;
+    --neg:#a85341; --neg-bg:#fbeae6;
+    --neu:#7d9299; --neu-bg:#eef2f3;
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+    --deva:"Tiro Devanagari Marathi","Nirmala UI","Noto Sans Devanagari",serif;
+    --sans:"DM Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+    --r:10px;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);
+       font-size:16px;line-height:1.55}
+  .deva{font-family:var(--deva);line-height:1.9}
+  .wrap{max-width:900px;margin:0 auto;padding-inline:20px}
+
+  /* header */
+  .head{padding-block:30px 20px}
+  .title{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .title .mr{font-family:var(--deva);color:var(--accent);font-size:1.5rem}
+  .title h1{font-size:1.5rem;margin:0;font-weight:700;letter-spacing:-.02em}
+  .title .meta{font-family:var(--mono);font-size:.7rem;color:var(--ink-mute);
+    margin-left:auto;text-transform:uppercase;letter-spacing:.08em}
+  .head p{color:var(--ink-soft);margin:8px 0 0;font-size:.95rem;max-width:64ch}
+
+  /* tabs */
+  .tabs{display:flex;gap:5px;flex-wrap:wrap;border-bottom:1px solid var(--line);
+    padding-bottom:0;margin-top:22px}
+  .tab{font-family:var(--sans);font-size:.92rem;font-weight:500;border:none;
+    background:none;color:var(--ink-mute);padding:9px 14px;cursor:pointer;
+    border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tab:hover{color:var(--accent)}
+  .tab[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent);
+    font-weight:700}
+  .tab .n{font-family:var(--mono);font-size:.7rem;opacity:.65;margin-right:5px}
+
+  .panelwrap{padding-block:26px 60px}
+  .lead{color:var(--ink-soft);font-size:.95rem;margin:0 0 18px;max-width:66ch}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    padding:20px}
+
+  label.fl{display:block;font-family:var(--mono);font-size:.68rem;
+    text-transform:uppercase;letter-spacing:.1em;color:var(--ink-mute);
+    margin-bottom:7px}
+  input[type=text]{font-family:var(--deva);font-size:1.25rem;width:100%;
+    padding:12px 14px;border:1px solid var(--line);border-radius:8px;
+    background:var(--bg);color:var(--ink)}
+  input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px;
+    border-color:transparent}
+  select{font-family:var(--deva);font-size:1rem;width:100%;padding:11px 13px;
+    border:1px solid var(--line);border-radius:8px;background:var(--card);
+    color:var(--ink)}
+  select:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
+  .chip{font-family:var(--deva);font-size:.95rem;padding:4px 12px;border-radius:999px;
+    border:1px solid var(--line);background:var(--card);color:var(--ink-soft);
+    cursor:pointer}
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+  .chip[aria-pressed=true]{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  /* gloss */
+  .gloss{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;
+    margin-top:24px;min-height:78px}
+  .mb{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .mb .seg{font-family:var(--deva);font-size:1.5rem;padding:8px 15px;border-radius:9px;
+    border:1px solid var(--line);background:var(--soft);line-height:1.5}
+  .mb.root .seg{background:var(--accent);color:#fff;border-color:var(--accent);
+    font-weight:500}
+  .mb .feat{font-family:var(--mono);font-size:.63rem;letter-spacing:.06em;
+    color:var(--ink-mute);text-transform:uppercase}
+  .plus{font-family:var(--mono);color:var(--ink-mute);font-size:1.2rem;padding-bottom:24px}
+  .note{font-size:.9rem;color:var(--ink-soft);margin-top:20px;padding-top:15px;
+    border-top:1px solid var(--line)}
+  .note b{color:var(--ink);font-weight:500}
+
+  .fams{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:10px;margin-top:16px}
+  .fam{border:1px solid var(--line);border-radius:8px;padding:11px 13px;
+    background:var(--card)}
+  .fam .f{font-family:var(--deva);font-size:.95rem;line-height:2;color:var(--ink-soft)}
+  .fam .r{font-family:var(--deva);font-size:1.1rem;color:var(--accent);font-weight:500;
+    margin-top:4px}
+  .fam .r::before{content:"→ ";font-family:var(--mono);color:var(--ink-mute);
+    font-size:.85rem}
+
+  /* search */
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  @media(max-width:680px){.vs{grid-template-columns:1fr}}
+  .side{border:1px solid var(--line);border-radius:9px;overflow:hidden;
+    background:var(--card)}
+  .side-h{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;
+    align-items:center;justify-content:space-between;gap:8px}
+  .side-h .nm{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;
+    letter-spacing:.09em}
+  .side.a .side-h{background:var(--neg-bg);color:var(--neg)}
+  .side.b .side-h{background:var(--pos-bg);color:var(--pos)}
+  .cnt{font-family:var(--mono);font-size:1rem;font-weight:500;
+    font-variant-numeric:tabular-nums}
+  .side-b{max-height:300px;overflow-y:auto}
+  .res{padding:10px 14px;border-bottom:1px solid var(--line)}
+  .res:last-child{border-bottom:none}
+  .res .t{font-family:var(--deva);font-size:.95rem;line-height:1.7;display:block}
+  .res .m{font-family:var(--mono);font-size:.63rem;color:var(--ink-mute);margin-top:3px;
+    text-transform:uppercase;letter-spacing:.05em;display:block}
+  .none{padding:34px 14px;text-align:center;color:var(--ink-mute);font-size:.88rem}
+  .none b{display:block;font-family:var(--mono);font-size:1.7rem;color:var(--neg);
+    margin-bottom:6px;font-weight:500}
+
+  /* pipeline */
+  .stage{border:1px solid var(--line);border-radius:9px;margin-top:11px;
+    background:var(--card);overflow:hidden}
+  .stage-h{display:flex;align-items:center;gap:9px;padding:9px 14px;
+    background:var(--soft);border-bottom:1px solid var(--line)}
+  .bdg{font-family:var(--mono);font-size:.66rem;font-weight:500;width:20px;height:20px;
+    display:grid;place-items:center;border-radius:5px;background:var(--accent);
+    color:#fff;flex:none}
+  .stage-n{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;
+    letter-spacing:.1em;color:var(--ink-soft)}
+  .stage-b{padding:15px 14px}
+  .kv{display:flex;justify-content:space-between;gap:12px;font-size:.9rem;
+    align-items:baseline}
+  .kv .v{font-family:var(--mono);font-size:.78rem;color:var(--ink-mute);
+    font-variant-numeric:tabular-nums}
+  .bar{height:6px;background:var(--soft);border-radius:99px;overflow:hidden;
+    margin-top:5px}
+  .bar i{display:block;height:100%;background:var(--accent)}
+  .lab{font-family:var(--mono);font-size:.63rem;text-transform:uppercase;
+    letter-spacing:.1em;color:var(--ink-mute);margin-bottom:5px}
+  .ents{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px}
+  .ent{font-family:var(--deva);font-size:.92rem;padding:3px 10px;border-radius:6px;
+    background:var(--accent-soft);color:var(--accent)}
+  .tone{display:inline-flex;align-items:center;font-family:var(--mono);font-size:.68rem;
+    text-transform:uppercase;letter-spacing:.08em;padding:3px 10px;border-radius:99px}
+  .tone.Positive{background:var(--pos-bg);color:var(--pos)}
+  .tone.Negative{background:var(--neg-bg);color:var(--neg)}
+  .tone.Neutral{background:var(--neu-bg);color:var(--neu)}
+  .stack{display:flex;height:14px;border-radius:4px;overflow:hidden;margin-top:12px}
+  .stack i{display:block;height:100%}
+  .en{font-size:.92rem;color:var(--ink-soft);border-left:2px solid var(--accent);
+    padding-left:12px;margin-top:10px}
+  footer{padding-block:0 40px;color:var(--ink-mute);font-size:.8rem}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+
+<script id="payload" type="application/json">__DATA__</script>
+
+<div class="wrap head">
+  <div class="title">
+    <span class="mr">मराठी</span>
+    <h1>News Intelligence</h1>
+    <span class="meta" id="meta"></span>
+  </div>
+  <p>A Marathi news article goes in &mdash; category, summary, entities, sentiment,
+     English translation and search come out.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="t0" aria-controls="p0" aria-selected="true"><span class="n">I</span>Morphology</button>
+    <button class="tab" role="tab" id="t1" aria-controls="p1" aria-selected="false"><span class="n">C</span>Search</button>
+    <button class="tab" role="tab" id="t2" aria-controls="p2" aria-selected="false"><span class="n">D E F G A</span>Full pipeline</button>
+  </div>
+</div>
+
+<div class="wrap panelwrap">
+
+  <div id="p0" role="tabpanel" aria-labelledby="t0">
+    <p class="lead">Marathi joins a whole phrase into one word. Type any Marathi word
+      &mdash; the analyser strips the suffix chain back to its root, live.</p>
+    <div class="card">
+      <label class="fl" for="mword">Marathi word</label>
+      <input type="text" id="mword" value="घरांमधून" spellcheck="false">
+      <div class="chips" id="mchips"></div>
+      <div id="mout"></div>
+    </div>
+    <div class="fams" id="fams"></div>
+  </div>
+
+  <div id="p1" role="tabpanel" aria-labelledby="t1" hidden>
+    <p class="lead">Two real search indexes over the same 400 articles, built in your
+      browser. The only difference is whether words pass through the analyser first.</p>
+    <div class="card">
+      <label class="fl" for="q">Search query</label>
+      <input type="text" id="q" value="न्यायालय" spellcheck="false">
+      <div class="chips" id="qchips"></div>
+      <div class="vs">
+        <div class="side a">
+          <div class="side-h"><span class="nm">Without morphology</span><span class="cnt" id="c-a">0</span></div>
+          <div class="side-b" id="r-a"></div>
+        </div>
+        <div class="side b">
+          <div class="side-h"><span class="nm">With morphology</span><span class="cnt" id="c-b">0</span></div>
+          <div class="side-b" id="r-b"></div>
+        </div>
+      </div>
+      <div class="note" id="qnote"></div>
+    </div>
+  </div>
+
+  <div id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+    <p class="lead">Pick an article. Everything below is real output from the models.</p>
+    <div class="card" style="padding:15px">
+      <label class="fl" for="pick">Article</label>
+      <select id="pick"></select>
+    </div>
+    <div id="artview"></div>
+  </div>
+
+</div>
+
+<footer class="wrap">Data: XL-Sum Marathi (BBC Marathi). Models: L3Cube-MahaNLP, NLLB-200.</footer>
+
+<script>
+(function(){
+  "use strict";
+  const DATA = JSON.parse(document.getElementById("payload").textContent);
+  const M = DATA.morph;
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+
+  /* ---- tabs ---- */
+  const tabs = [...document.querySelectorAll(".tab")];
+  tabs.forEach(t => t.addEventListener("click", ()=>{
+    tabs.forEach(o=>{
+      const on = o === t;
+      o.setAttribute("aria-selected", String(on));
+      document.getElementById(o.getAttribute("aria-controls")).hidden = !on;
+    });
+  }));
+
+  /* ================= analyser (port of src/morph.py) ================= */
+  const MARKS = new Set(Array.from(M.marks));
+  const FINAL = new Set(Array.from(M.finalMatras));
+  const STOP = new Set(M.stopwords);
+  const byLen = t => t.slice().sort((a,b)=> b[0].length - a[0].length);
+  const LAYERS = [byLen(M.clitics), byLen(M.postpositions), byLen(M.verb), byLen(M.case)];
+  const aksh = s => { let n=0; for(const c of s) if(!MARKS.has(c)) n++; return n; };
+
+  function restore(s){
+    while(s.endsWith(M.virama)) s = s.slice(0,-1);
+    if(s && FINAL.has(s[s.length-1]) && aksh(s) >= M.minStem) s = s.slice(0,-1);
+    return s;
+  }
+  function strip1(w){
+    for(const table of LAYERS) for(const [suf,feat,repl] of table){
+      if(!w.endsWith(suf)) continue;
+      const c = w.slice(0, w.length-suf.length) + repl;
+      if(aksh(c) >= M.minStem) return [c,suf,feat];
+    }
+    return null;
+  }
+  const cache = new Map();
+  function analyse(word){
+    if(cache.has(word)) return cache.get(word);
+    let w = word.normalize("NFC"), res;
+    if(Object.prototype.hasOwnProperty.call(M.exceptions, word)){
+      res = {root:M.exceptions[word], features:[], stripped:[]};
+    } else {
+      const features=[], stripped=[];
+      for(let i=0;i<M.maxStrips;i++){
+        const h = strip1(w); if(!h) break;
+        w = h[0]; stripped.push(h[1]); features.push(h[2]);
+      }
+      res = {root:restore(w), features, stripped};
+    }
+    cache.set(word,res); return res;
+  }
+  const stem = w => analyse(w).root;
+  const tokenize = t => (t||"").match(/[\u0900-\u097F]+|[A-Za-z]+|\d+/g) || [];
+  function normTokens(text, useMorph){
+    const out=[];
+    for(const tok of tokenize(text)){
+      if(STOP.has(tok)) continue;
+      const t = useMorph ? stem(tok) : tok;
+      if(STOP.has(t)) continue;
+      if(aksh(t) >= M.minStem || /^[\x00-\x7F]+$/.test(t)) out.push(t);
+    }
+    return out;
+  }
+
+  /* ================= BM25 (port of src/retrieve.py) ================= */
+  const K1=1.5, B=0.75;
+  function build(texts, useMorph){
+    const postings = new Map(), len=[];
+    texts.forEach((txt,i)=>{
+      const toks = normTokens(txt,useMorph); len.push(toks.length);
+      const tf = new Map();
+      for(const t of toks) tf.set(t,(tf.get(t)||0)+1);
+      for(const [t,f] of tf){ if(!postings.has(t)) postings.set(t,[]); postings.get(t).push([i,f]); }
+    });
+    const avg = len.length ? len.reduce((a,b)=>a+b,0)/len.length : 0;
+    return {postings,len,avg,n:texts.length};
+  }
+  function search(idx,q,useMorph,topK){
+    const sc = new Float64Array(idx.n);
+    for(const term of normTokens(q,useMorph)){
+      const p = idx.postings.get(term); if(!p) continue;
+      const idf = Math.max(Math.log((idx.n-p.length+0.5)/(p.length+0.5)+1),0);
+      for(const [d,f] of p){
+        const dn = f + K1*(1-B+B*idx.len[d]/Math.max(idx.avg,1e-9));
+        sc[d] += idf*(f*(K1+1))/Math.max(dn,1e-9);
+      }
+    }
+    const hits=[]; for(let i=0;i<idx.n;i++) if(sc[i]>0) hits.push([i,sc[i]]);
+    hits.sort((a,b)=>b[1]-a[1]);
+    return topK ? hits.slice(0,topK) : hits;
+  }
+
+  /* ================= tab 1 ================= */
+  $("#meta").textContent = DATA.meta.corpus_size.toLocaleString() + " articles processed";
+
+  const WORDS = ["घरांमधून","शाळेतून","न्यायालयाने","मुलांना","पुण्यातील","विद्यार्थ्यांसाठी","जिंकले","मुंबईपासून"];
+  $("#mchips").innerHTML = WORDS.map(w=>`<button class="chip" type="button" data-w="${esc(w)}">${esc(w)}</button>`).join("");
+
+  function renderMorph(word){
+    word=(word||"").trim();
+    if(!word){ $("#mout").innerHTML=`<div class="note">Type a Marathi word above.</div>`; return; }
+    const a = analyse(word);
+    const segs=[`<div class="mb root"><span class="seg">${esc(a.root)}</span><span class="feat">root</span></div>`];
+    for(let i=a.stripped.length-1;i>=0;i--){
+      segs.push(`<span class="plus">+</span>`);
+      segs.push(`<div class="mb"><span class="seg">${esc(a.stripped[i])}</span><span class="feat">${esc(a.features[i])}</span></div>`);
+    }
+    const note = a.stripped.length
+      ? `Every form of this word now indexes under one term: <b>${esc(a.root)}</b>.`
+      : `<b>${esc(word)}</b> carries no suffix &mdash; it is already a root.`;
+    $("#mout").innerHTML = `<div class="gloss">${segs.join("")}</div><div class="note">${note}</div>`;
+    document.querySelectorAll("#mchips .chip").forEach(c=>
+      c.setAttribute("aria-pressed", String(c.dataset.w===word)));
+  }
+  $("#mword").addEventListener("input", e=>renderMorph(e.target.value));
+  $("#mchips").addEventListener("click", e=>{
+    const b=e.target.closest(".chip"); if(!b) return;
+    $("#mword").value=b.dataset.w; renderMorph(b.dataset.w);
+  });
+  renderMorph($("#mword").value);
+
+  const FAMS = [["घर","घरात","घरातून","घरांमधून"],["शाळा","शाळेत","शाळेतून","शाळांना"],
+                ["मुंबई","मुंबईत","मुंबईतील","मुंबईपासून"]];
+  $("#fams").innerHTML = FAMS.map(g=>{
+    const r=[...new Set(g.map(stem))];
+    return `<div class="fam"><div class="f">${g.map(esc).join("&nbsp;·&nbsp;")}</div>
+      <div class="r">${r.map(esc).join(" / ")}</div></div>`;
+  }).join("");
+
+  /* ================= tab 2 ================= */
+  const DOCS = DATA.docs;
+  const texts = DOCS.map(d=>`${d.title} ${d.summary}`);
+  const iA = build(texts,false), iB = build(texts,true);
+
+  const QS = ["न्यायालय","सरकार","महिला","शाळा","पोलीस","पाऊस"];
+  $("#qchips").innerHTML = QS.map(q=>`<button class="chip" type="button" data-q="${esc(q)}">${esc(q)}</button>`).join("");
+
+  function side(elId,cntId,hits){
+    $(cntId).textContent = hits.length;
+    $(elId).innerHTML = hits.length
+      ? hits.slice(0,10).map(([i,s])=>{
+          const d=DOCS[i];
+          return `<div class="res"><span class="t">${esc(d.title)}</span>
+            <span class="m">${esc(d.topic)} · score ${s.toFixed(2)}</span></div>`;
+        }).join("")
+      : `<div class="none"><b>0</b>No documents matched.</div>`;
+  }
+  function runSearch(q){
+    q=(q||"").trim();
+    const ha = q?search(iA,q,false,50):[], hb = q?search(iB,q,true,50):[];
+    side("#r-a","#c-a",ha); side("#r-b","#c-b",hb);
+    const d = hb.length-ha.length;
+    let v;
+    if(!q) v="Type a query above.";
+    else if(d>0) v=`Morphology found <b>${d} more</b> article${d===1?"":"s"} the plain index cannot reach.`;
+    else if(d===0) v=`<b>No difference for this word</b> &mdash; the articles happen to use it in the same form as the query.`;
+    else v=`Plain found ${-d} more here &mdash; over-stemming can merge distinct words.`;
+    $("#qnote").innerHTML = v;
+    document.querySelectorAll("#qchips .chip").forEach(c=>
+      c.setAttribute("aria-pressed", String(c.dataset.q===q)));
+  }
+  $("#q").addEventListener("input", e=>runSearch(e.target.value));
+  $("#qchips").addEventListener("click", e=>{
+    const b=e.target.closest(".chip"); if(!b) return;
+    $("#q").value=b.dataset.q; runSearch(b.dataset.q);
+  });
+  runSearch($("#q").value);
+
+  /* ================= tab 3 ================= */
+  const SHOW = DATA.showcase;
+  $("#pick").innerHTML = SHOW.map((d,i)=>
+    `<option value="${i}">${esc(d.topic)} — ${esc(d.title.slice(0,70))}</option>`).join("");
+
+  const ORDER = ["Person","Organization","Location","Date"];
+  function renderArticle(i){
+    const d = SHOW[i];
+    const top = Object.entries(d.topic_scores||{}).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    const dist = d.sentiment_distribution||{};
+    const tot = Math.max(Object.values(dist).reduce((a,b)=>a+b,0),1);
+    const ents = ORDER.filter(k=>(d.entities||{})[k]&&d.entities[k].length);
+
+    $("#artview").innerHTML = `
+      <div class="stage"><div class="stage-h"><span class="bdg">·</span><span class="stage-n">Input article</span></div>
+        <div class="stage-b"><div class="deva" style="font-size:1.05rem;font-weight:500">${esc(d.title)}</div>
+        <div class="en">${esc(d.title_en)}</div></div></div>
+
+      <div class="stage"><div class="stage-h"><span class="bdg">D</span><span class="stage-n">Category</span></div>
+        <div class="stage-b">${top.map(([k,v],j)=>`
+          <div style="margin-bottom:${j===top.length-1?0:9}px">
+            <div class="kv"><span${j===0?' style="font-weight:500"':''}>${esc(k)}</span><span class="v">${(v*100).toFixed(1)}%</span></div>
+            <div class="bar"><i style="width:${(v*100).toFixed(1)}%;opacity:${j===0?1:.35}"></i></div>
+          </div>`).join("")}</div></div>
+
+      <div class="stage"><div class="stage-h"><span class="bdg">E</span><span class="stage-n">Summary</span></div>
+        <div class="stage-b"><div class="deva" style="font-size:.96rem">${esc(d.summary)}</div>
+        <div class="en">${esc(d.summary_en)}</div></div></div>
+
+      <div class="stage"><div class="stage-h"><span class="bdg">G</span><span class="stage-n">Entities</span></div>
+        <div class="stage-b">${ents.map(k=>`<div class="lab">${esc(k)}</div>
+          <div class="ents">${d.entities[k].slice(0,7).map(v=>`<span class="ent">${esc(v)}</span>`).join("")}</div>`).join("")
+          || '<span style="color:var(--ink-mute);font-size:.9rem">None found.</span>'}</div></div>
+
+      <div class="stage"><div class="stage-h"><span class="bdg">F</span><span class="stage-n">Sentiment</span></div>
+        <div class="stage-b">
+          <span class="tone ${esc(d.sentiment)}">${esc(d.sentiment)}</span>
+          <div class="stack">
+            <i style="width:${(dist.Positive||0)/tot*100}%;background:var(--pos)"></i>
+            <i style="width:${(dist.Neutral||0)/tot*100}%;background:var(--neu)"></i>
+            <i style="width:${(dist.Negative||0)/tot*100}%;background:var(--neg)"></i>
+          </div>
+          <div style="font-family:var(--mono);font-size:.66rem;color:var(--ink-mute);margin-top:6px">
+            ${dist.Positive||0} positive · ${dist.Neutral||0} neutral · ${dist.Negative||0} negative sentences</div>
+        </div></div>
+
+      <div class="stage"><div class="stage-h"><span class="bdg">A</span><span class="stage-n">English translation</span></div>
+        <div class="stage-b" style="font-size:.95rem;color:var(--ink-soft)">${esc(d.summary_en)}</div></div>`;
+  }
+  $("#pick").addEventListener("change", e=>renderArticle(+e.target.value));
+  renderArticle(0);
+})();
+</script>
+</body>
+</html>
