@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Demo User Manual — Marathi News Intelligence</title>
+<link rel="stylesheet" href="doc.css"></head>
+<body>
+
+<div class="kicker">Marathi News Intelligence · User manual</div>
+<h1>How to run and use the demo</h1>
+<p class="sub">Everything you need to open the demo, use each tab with your own Marathi text,
+and switch on the full models. No technical background needed.</p>
+
+<div class="box">
+  <span class="lab">Quick start — 30 seconds</span>
+  <ol style="margin:0">
+    <li>Open the file <code>Marathi-NLP-Demo.html</code> (double-click it).</li>
+    <li>Click a tab: <b>Morphology</b>, <b>Search</b> or <b>Full pipeline</b>.</li>
+    <li>Type or paste Marathi text. Results appear on the spot.</li>
+  </ol>
+</div>
+
+<h3>What's in this manual</h3>
+<ol class="toc">
+  <li>What you need</li>
+  <li>Opening the demo</li>
+  <li>The screen at a glance</li>
+  <li>Tab 1 — Morphology</li>
+  <li>Tab 2 — Search</li>
+  <li>Tab 3 — Full pipeline</li>
+  <li>English translation</li>
+  <li>Using the full models (optional)</li>
+  <li>The Streamlit dashboard (optional)</li>
+  <li>Problems and fixes</li>
+  <li>Checklist before presenting</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2><span class="num">1</span>What you need</h2>
+<p>The demo can run in three ways. Most of the time you only need the first one.</p>
+<table>
+  <tr><th>Way to run</th><th>What you need</th><th>What you get</th></tr>
+  <tr><td><b>A. Just the web page</b><br><span style="color:var(--mute)">recommended</span></td>
+      <td>Any browser (Chrome, Edge, Firefox, Safari). No installation.</td>
+      <td>All three tabs work on any text you paste. Category, sentiment and entities use small
+          built-in models. Translation needs internet.</td></tr>
+  <tr><td><b>B. Web page + model server</b></td>
+      <td>Python 3.10 or newer, plus one command left running.</td>
+      <td>Same page, but category, entities, sentiment and translation use the
+          <b>full, more accurate models</b>.</td></tr>
+  <tr><td><b>C. Streamlit dashboard</b></td>
+      <td>Python, and about 10 minutes of one-time setup.</td>
+      <td>A second app that also searches all 3,000 articles and can fetch today's news.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2><span class="num">2</span>Opening the demo</h2>
+<h3>If you already have the project folder</h3>
+<ol class="steps">
+  <li>Open the folder <code>Marathi-news-intelligence-pipeline</code>.</li>
+  <li>Double-click <code>Marathi-NLP-Demo.html</code>. It opens in your web browser.</li>
+</ol>
+
+<h3>If you are getting it from GitHub</h3>
+<p>The project is at <code>github.com/anishc23/nlp-project</code>. GitHub shows HTML files as code,
+so you have to download the page first:</p>
+<ol class="steps">
+  <li>Go to the repository and open <code>Marathi-news-intelligence-pipeline</code>, then
+      <code>Marathi-NLP-Demo.html</code>.</li>
+  <li>Click the <b>Download raw file</b> button (the arrow icon at the top right of the file view).</li>
+  <li>Double-click the downloaded file.</li>
+</ol>
+<p>To get the whole project instead, click the green <b>Code</b> button, then <b>Download ZIP</b>, and unzip it.</p>
+
+<div class="box note"><span class="lab">Good to know</span>
+<p>The page is one file of about 4 MB. You can email it, copy it to a pendrive, or open it on a
+phone. Everything except translation works offline. The internet is only used for nicer
+fonts and for English translation.</p></div>
+
+<!-- ============================================================ -->
+<h2><span class="num">3</span>The screen at a glance</h2>
+<figure class="w80"><img src="shots/01_open.png"><figcaption>What you see when the page opens. The Morphology tab is already selected.</figcaption></figure>
+<p>There are three tabs across the top. The small letters before each name are the NLP task
+codes from the assignment list:</p>
+<table>
+  <tr><th>Tab</th><th>Task codes</th><th>What it does</th></tr>
+  <tr><td><b>Morphology</b></td><td>I</td><td>Breaks Marathi words into a root plus grammar endings.</td></tr>
+  <tr><td><b>Search</b></td><td>C</td><td>Searches 400 news articles, with and without the root-finding step, side by side.</td></tr>
+  <tr><td><b>Full pipeline</b></td><td>D E F G A</td><td>Takes a whole article and gives its topic, summary, names, tone and English translation.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2><span class="num">4</span>Tab 1 — Morphology</h2>
+<p>Marathi joins what English says in several words into one word. For example
+<span class="mr">घरांमधून</span> means "from inside the houses". This tab splits such words back into
+their pieces.</p>
+
+<h3>Look at one word</h3>
+<ol class="steps">
+  <li>Type a Marathi word in the box, or click one of the grey example buttons under it.</li>
+  <li>The coloured blocks show the result. The dark green block is the <b>root</b> (the basic word).
+      The grey blocks are the <b>endings</b> that were removed.</li>
+</ol>
+<figure><img src="shots/04_morph_own_word.png"><figcaption><span class="mr">विद्यार्थ्यांसाठी</span> ("for the students") = root + plural ending + "for"</figcaption></figure>
+
+<h3>Paste a sentence or a whole article</h3>
+<ol class="steps">
+  <li>Paste any Marathi text into the same box.</li>
+  <li>You get a table with every word, its root, the endings removed and their grammar labels,
+      plus three numbers at the top: how many words, how many had an ending, and how many
+      different words are left after reducing them to roots.</li>
+</ol>
+<figure><img src="shots/05_morph_text.png"><figcaption>A pasted sentence. Every word is reduced to its root.</figcaption></figure>
+
+<h4>What the notes in the table mean</h4>
+<table>
+  <tr><td class="k">—</td><td>The word had no ending. It is already a root.</td></tr>
+  <tr><td class="k">exception list</td><td>A word the analyser handles with a fixed answer, so it is not cut wrongly (for example <span class="mr">सरकारने</span> stays <span class="mr">सरकार</span>).</td></tr>
+  <tr><td class="k">final vowel normalised</td><td>Only the last vowel sign was dropped, so related forms (<span class="mr">शाळा</span>, <span class="mr">शाळेत</span>) end up with the same root.</td></tr>
+</table>
+
+<h4>Common grammar labels</h4>
+<table>
+  <tr><th>Label</th><th>Meaning</th><th>Example ending</th></tr>
+  <tr><td>PL.OBL</td><td>plural form before another ending</td><td class="mr">ां</td></tr>
+  <tr><td>LOC</td><td>"in / at"</td><td class="mr">त, मध्ये</td></tr>
+  <tr><td>ABL</td><td>"from"</td><td class="mr">पासून, मधून, तून</td></tr>
+  <tr><td>GEN</td><td>"of"</td><td class="mr">चा, ची, चे, च्या</td></tr>
+  <tr><td>DAT</td><td>"to / for (a person)"</td><td class="mr">ला, ना</td></tr>
+  <tr><td>INS</td><td>"by"</td><td class="mr">ने, नी</td></tr>
+  <tr><td>BEN</td><td>"for (the sake of)"</td><td class="mr">साठी</td></tr>
+  <tr><td>PST / FUT / PRS</td><td>past / future / present verb endings</td><td class="mr">ले, णार, तो</td></tr>
+</table>
+
+<p>The three cards at the bottom of the tab always show four forms of one word collapsing to a single root:</p>
+<figure><img src="shots/06_families.png"><figcaption>Four forms, one root. This is what makes the search tab work.</figcaption></figure>
+
+<!-- ============================================================ -->
+<h2><span class="num">5</span>Tab 2 — Search</h2>
+<p>There are two search engines over the same 400 news articles. The only difference: the right-hand one
+reduces every word to its root first (using the Morphology tab's analyser); the left-hand one does not.</p>
+
+<h3>Run a search</h3>
+<ol class="steps">
+  <li>Click the <b>Search</b> tab. The query <span class="mr">न्यायालय</span> ("court") is already filled in.</li>
+  <li>Type or paste any Marathi word or phrase in the box, or click a grey example button.</li>
+  <li>Compare the two big numbers: results <b>without</b> morphology (left, red) and <b>with</b> it (right, green).</li>
+</ol>
+<figure><img src="shots/07_search_court.png"><figcaption><span class="mr">न्यायालय</span>: 1 result without morphology, 14 with it.</figcaption></figure>
+<p>The line under the results explains what happened. For some words both sides find the same
+number, because the articles use the word in exactly the same form:</p>
+<figure><img src="shots/08_search_rain.png"><figcaption><span class="mr">पाऊस</span> ("rain"): 3 and 3, no difference.</figcaption></figure>
+
+<h3>Add your own articles to the search</h3>
+<ol class="steps">
+  <li>Under the results, click <b>Add your own articles to the index</b>.</li>
+  <li>Paste a headline and the article text, then click <b>Add to both indexes</b>.</li>
+  <li>Search for a word from your article. It appears in the results marked <b>YOUR ARTICLE</b>,
+      with a topic chosen automatically.</li>
+</ol>
+<div class="grid">
+  <figure style="margin:0"><img src="shots/09_add_article_form.png"><figcaption>Pasting an article</figcaption></figure>
+  <figure style="margin:0"><img src="shots/10_add_article_found.png"><figcaption>Finding it again</figcaption></figure>
+</div>
+<div class="box note"><span class="lab">Note</span><p>Added articles are kept only until you reload
+the page.</p></div>
+
+<!-- ============================================================ -->
+<h2><span class="num">6</span>Tab 3 — Full pipeline</h2>
+<p>This tab takes a whole news article and runs every stage on it.</p>
+
+<h3>Analyse an article</h3>
+<ol class="steps">
+  <li>Click the <b>Full pipeline</b> tab. The first example is already analysed.</li>
+  <li>To try your own: click <b>Clear</b>, paste a headline (optional) and the Marathi article text.
+      A copied news article from any Marathi site works well.</li>
+  <li>Click <b>Analyse</b> (or press <b>Ctrl + Enter</b>, <b>⌘ + Enter</b> on a Mac).</li>
+  <li>Or pick one of the eight ready-made examples from <b>Start from an example</b>.</li>
+</ol>
+<figure><img src="shots/12_pipeline_input.png"><figcaption>A pasted article, ready to analyse. The badge shows which models are being used.</figcaption></figure>
+
+<h3>Reading the results</h3>
+<p>The results appear below as a stack of boxes, one per stage, in the order the pipeline runs them.</p>
+<table>
+  <tr><th>Box</th><th>What it shows</th></tr>
+  <tr><td><b>Input article</b></td><td>Your headline, how many words it has, and what share of them carry a grammar ending.</td></tr>
+  <tr><td><b>D · Category</b></td><td>The three most likely topics out of 12 (Politics, Sports, Health…) with confidence bars.</td></tr>
+  <tr><td><b>E · Summary</b></td><td>The three most important sentences of the article, in their original order.</td></tr>
+  <tr><td><b>G · Entities</b></td><td>Names found in the text, grouped as Person, Organization, Location, Date, Designation and so on.</td></tr>
+  <tr><td><b>F · Sentiment</b></td><td>The overall tone (Positive, Neutral or Negative), a colour bar, and the tone of each summary sentence.</td></tr>
+  <tr><td><b>A · English translation</b></td><td>A button that translates the headline and summary to English (see section 7).</td></tr>
+</table>
+<figure class="half"><img src="shots/15_stage_category.png"><figcaption>Category box</figcaption></figure>
+<figure class="half"><img src="shots/18_stage_sentiment.png"><figcaption>Sentiment box, with the tone of each sentence</figcaption></figure>
+
+<h3>The small grey label on each box</h3>
+<p>The top-right corner of each box says which model produced it:</p>
+<table>
+  <tr><td class="k">in-browser · 83% agreement</td><td>A small model built into the page. The number is how often it gives the same answer as
+      the full model, measured on 1,362 articles it had never seen.</td></tr>
+  <tr><td class="k">full model</td><td>The real, large model, used when the model server is running (section 8).</td></tr>
+  <tr><td class="k">TextRank · same algorithm as Python</td><td>The summary uses exactly the same method as the Python project, so it is identical either way.</td></tr>
+</table>
+<div class="box warn"><span class="lab">Expect some mistakes from the in-browser models</span>
+<p>The built-in entity finder is the least accurate part (it agrees with the full model about 72% of the time).
+In the example above it wrongly marks <span class="mr">विजय</span> ("victory") as a person's name.
+For the most accurate results, start the model server (section 8).</p></div>
+
+<!-- ============================================================ -->
+<h2><span class="num">7</span>English translation</h2>
+<ol class="steps">
+  <li>After analysing, scroll to the <b>A · English translation</b> box and click <b>Translate to English</b>.</li>
+  <li>The page first loads the translation program. If one download site is blocked on your network, it
+      automatically tries three others; the status line shows which one it is trying.</li>
+  <li><b>The first time only</b>, the page then downloads the translation model (about 900 MB). A progress line shows
+      how much has arrived. This takes a few minutes on a normal connection.</li>
+  <li>The headline and summary appear in English. The model is saved in the browser, so later
+      translations skip the download and take only seconds. Keep an internet connection on, though:
+      the page still loads the small translation program itself from the internet.</li>
+</ol>
+<figure><img src="shots/24_translation.png"><figcaption>The translated headline and summary</figcaption></figure>
+<div class="box note"><span class="lab">Tips</span>
+<ul>
+  <li>For the ready-made examples there is also a <b>Show saved translation</b> button, which is instant and needs no internet.</li>
+  <li>Do the first translation at home, before the presentation, so the model is already saved. Use the same
+      browser on the day.</li>
+  <li>If the model server is running, translation goes through it instead: no download, and faster.</li>
+</ul></div>
+
+<!-- ============================================================ -->
+<h2><span class="num">8</span>Using the full models (optional)</h2>
+<p>The page can hand your text to the project's real, full-size models, which are more accurate.
+You need Python 3.10 or newer.</p>
+
+<h3>One-time setup</h3>
+<p>Open a terminal (Mac: <b>Terminal</b>; Windows: <b>Command Prompt</b>) in the
+<code>Marathi-news-intelligence-pipeline</code> folder and run:</p>
+<pre>python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt</pre>
+
+<h3>Every time</h3>
+<ol class="steps">
+  <li>In that folder, run <code>python app/server.py</code> and leave the window open.</li>
+  <li>Open (or reload) <code>Marathi-NLP-Demo.html</code>.</li>
+  <li>Click <b>Analyse</b>. The badge next to the button changes to <b>Full models · local server</b>,
+      and the boxes say <b>full model</b>.</li>
+  <li>When finished, go back to the terminal and press <b>Ctrl + C</b> to stop the server.</li>
+</ol>
+<div class="grid" style="align-items:end">
+  <figure style="margin:0"><img src="shots/20_mode_badge.png"><figcaption>Without the server</figcaption></figure>
+  <figure style="margin:0"><img src="shots/21_full_badge.png"><figcaption>With the server running</figcaption></figure>
+</div>
+<p>The difference shows most in the entities. The same article, with the full model:</p>
+<figure class="half"><img src="shots/23_full_entities.png"><figcaption>Full model: correctly finds <span class="mr">जसप्रीत बुमराह</span> as the only person.</figcaption></figure>
+<div class="box note"><span class="lab">Good to know</span>
+<ul>
+  <li>The <b>first</b> Analyse after starting the server downloads the models (about 5 GB, once) and loads them.
+      That first run can take a while; after that each article takes a few seconds.</li>
+  <li>The server only accepts connections from your own computer.</li>
+  <li>If the server stops, the page automatically goes back to its built-in models.</li>
+</ul></div>
+
+<!-- ============================================================ -->
+<h2><span class="num">9</span>The Streamlit dashboard (optional)</h2>
+<p>A second app that works over all 3,000 processed articles. After the one-time setup in section 8, run
+these once (they take about 10 minutes and download the datasets):</p>
+<pre>python scripts/download_data.py
+python scripts/build_corpus.py --limit 3000
+python scripts/build_index.py --plain-bm25</pre>
+<p>Then start it any time with:</p>
+<pre>streamlit run app/dashboard.py</pre>
+<p>It opens in the browser with five tabs: <b>Search</b> (all 3,000 articles, with topic and tone filters),
+<b>Overview</b> (topic and tone charts), <b>Entity tone</b> (how a person or party is covered),
+<b>Morphology</b>, and <b>Analyse</b> (paste text, or fetch today's news from BBC Marathi, ABP Majha and Lokmat).</p>
+
+<!-- ============================================================ -->
+<h2><span class="num">10</span>Problems and fixes</h2>
+<table>
+  <tr><th style="width:36%">Problem</th><th>What to do</th></tr>
+  <tr><td>GitHub shows lines of code instead of the page</td>
+      <td>Use <b>Download raw file</b> and open the downloaded file (section 2).</td></tr>
+  <tr><td>Marathi letters look plain or slightly different</td>
+      <td>That is only the font; without internet the page uses your computer's Marathi font. Everything still works.</td></tr>
+  <tr><td>"That doesn't look like Marathi text"</td>
+      <td>The page only analyses text in Devanagari script. Paste Marathi, not English or romanised Marathi.</td></tr>
+  <tr><td>The summary says "Too short to summarise"</td>
+      <td>No sentence had three or more words. Paste full sentences ending with <span class="mr">।</span> . ! or ?</td></tr>
+  <tr><td>The summary is the whole text</td>
+      <td>With three sentences or fewer there is nothing to shorten. Paste a longer article.</td></tr>
+  <tr><td>"Translation failed: Could not load the translation program — this network blocks …"</td>
+      <td>Your network (often mobile data) blocks all four sites the translator is downloaded from.
+          Switch to another network such as Wi-Fi or a different hotspot, use <b>Show saved translation</b>
+          for the examples, or run the model server (section 8).</td></tr>
+  <tr><td>"Translation failed: Could not download the translation model from huggingface.co"</td>
+      <td>The connection dropped, or the network blocks huggingface.co. Click the button again, or use another
+          network or the model server.</td></tr>
+  <tr><td>Translation is very slow the first time</td>
+      <td>It is downloading about 900 MB. Watch the progress line; it only happens once per browser.</td></tr>
+  <tr><td>Badge still says "In-browser models" with the server running</td>
+      <td>Check the terminal still shows the server, then click <b>Analyse</b> again (the page checks on every click).
+          The server must use port 8765; close any other program on that port.</td></tr>
+  <tr><td>My added search articles disappeared</td>
+      <td>They are kept only until the page is reloaded. Add them again.</td></tr>
+  <tr><td>The browser's developer console shows "connection refused"</td>
+      <td>Harmless. It is the page checking whether the model server is running.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2><span class="num">11</span>Checklist before presenting</h2>
+<ol class="steps">
+  <li>Open the demo page on the presentation laptop and click through all three tabs once.</li>
+  <li>On the network you will use for the presentation, click <b>Translate to English</b> once. This checks that
+      the network allows it and saves the translation model. If that network blocks it, plan to use Wi-Fi,
+      <b>Show saved translation</b>, or the model server.</li>
+  <li>Copy a short Marathi news article (4–8 sentences) from a news site, ready to paste into the Full pipeline tab.</li>
+  <li>Optional: start <code>python app/server.py</code> and run <b>Analyse</b> once, so the full models are already loaded.</li>
+  <li>Keep this manual and the Explanation Guide open in another window.</li>
+</ol>
+
+<div class="foot">Marathi News Intelligence Pipeline · Demo user manual · Screenshots taken from the current version of Marathi-NLP-Demo.html</div>
+</body></html>

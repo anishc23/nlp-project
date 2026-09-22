@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Project Explanation Guide — Marathi News Intelligence</title>
+<link rel="stylesheet" href="doc.css"></head>
+<body>
+
+<div class="kicker">NLP mini project · Explanation guide</div>
+<h1>Marathi News Intelligence Pipeline</h1>
+<p class="sub">Everything you need to understand the project and explain it confidently in the
+presentation, in plain language.</p>
+
+<div class="stats">
+  <div><b>7</b><span>NLP tasks</span></div>
+  <div><b>3,000</b><span>articles processed</span></div>
+  <div><b>54.7%</b><span>smaller search index</span></div>
+  <div><b>95.4%</b><span>classifier accuracy</span></div>
+  <div><b>59</b><span>automated tests</span></div>
+</div>
+
+<h3>Contents</h3>
+<ol class="toc">
+  <li>The project in one minute</li>
+  <li>Why Marathi is hard for computers</li>
+  <li>The seven tasks, simply explained</li>
+  <li>How the parts fit together</li>
+  <li>The data and the models</li>
+  <li>Results: what we measured</li>
+  <li>How the demo works</li>
+  <li>Honest limitations</li>
+  <li>Slide-by-slide speaking notes</li>
+  <li>The live demo script</li>
+  <li>Questions you may be asked</li>
+  <li>Numbers and words to remember</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2><span class="num">1</span>The project in one minute</h2>
+<p>We built a system that reads <b>Marathi news articles</b> and understands them automatically.
+You give it one article, and it tells you:</p>
+<ul>
+  <li><b>what the article is about</b> (its topic, such as Politics or Sports),</li>
+  <li><b>the most important sentences</b> (a short summary),</li>
+  <li><b>who and where</b> it mentions (people, places, organisations, dates),</li>
+  <li><b>its tone</b> (positive, neutral or negative),</li>
+  <li><b>an English translation</b>, so non-Marathi readers can follow it,</li>
+</ul>
+<p>and it adds the article to a <b>search engine</b>. All of this happens automatically, with no human help.</p>
+<div class="box say"><span class="lab">Say it like this</span>
+<p>"Our project is a Marathi news assistant. One article goes in, and out come its topic, a summary,
+the people and places in it, its tone, and an English translation, and it becomes searchable. The heart
+of it is a tool we wrote ourselves that understands how Marathi words are built."</p></div>
+
+<!-- ============================================================ -->
+<h2><span class="num">2</span>Why Marathi is hard for computers</h2>
+<p>Marathi is spoken by more than 83 million people, but it has far fewer computer tools than English.
+The main difficulty is how Marathi builds words. It is an <b>agglutinative</b> language: where English
+uses several separate words, Marathi glues extra pieces onto the end of one word.</p>
+<table>
+  <tr><th>Marathi word</th><th>Built from</th><th>Meaning</th></tr>
+  <tr><td class="mr">घर</td><td class="mr">घर</td><td>house</td></tr>
+  <tr><td class="mr">घरात</td><td class="mr">घर + आत</td><td>in the house</td></tr>
+  <tr><td class="mr">घरातून</td><td class="mr">घर + आतून</td><td>from inside the house</td></tr>
+  <tr><td class="mr">घरांमधून</td><td class="mr">घर + ां + मधून</td><td>from inside the houses</td></tr>
+  <tr><td class="mr">घराच्या</td><td class="mr">घर + आ + च्या</td><td>of the house</td></tr>
+</table>
+<p>A normal computer program splits text at spaces, so it sees these as <b>five unrelated words</b>.
+If you search for <span class="mr">घर</span>, it misses every article that says
+<span class="mr">घरात</span> or <span class="mr">घरांमधून</span>. The same problem hurts summaries, counting names,
+and anything else that compares words.</p>
+<p>How common is this? In our 3,000 articles, <b>36% of all words</b> carry at least one of these endings.</p>
+<div class="box"><span class="lab">Our fix: the morphological analyser</span>
+<p>We wrote a program that removes these endings step by step and finds the <b>root</b> of each word,
+so all five forms above become <span class="mr">घर</span>. We wrote it from scratch using rules;
+it needed no training data. Because of it, the search index shrinks from <b>186,593</b> different words
+to <b>84,480</b>, which is <b>54.7% smaller</b>.</p></div>
+<div class="box note"><span class="lab">A small detail worth knowing</span>
+<p>In Devanagari, vowel signs are stored as separate characters, so <span class="mr">घरा</span> is 3 characters but only 2
+written syllables. Our analyser measures length in syllables, not characters. Before we fixed this,
+<span class="mr">शाळा</span> and <span class="mr">शाळेत</span> ended up with different roots. It's a good example
+of a bug we found and fixed.</p></div>
+
+<!-- ============================================================ -->
+<h2><span class="num">3</span>The seven tasks, simply explained</h2>
+<p>The assignment gave a list of NLP tasks with letter codes. Our project does seven of them, connected
+as one system rather than seven separate programs.</p>
+
+<div class="grid">
+  <div class="card"><h4><span class="tag">I</span>Morphological analyser</h4>
+    <p>Finds the root of every word by removing its endings in four layers: emphasis words, then
+    postpositions ("from", "in"), then verb endings, then case and plural endings.</p>
+    <div class="eg"><span class="mr">घरांमधून</span> → <span class="mr">घर</span> + plural + "from"</div></div>
+  <div class="card"><h4><span class="tag">D</span>Text categorisation</h4>
+    <p>Decides the topic of an article out of 12: Politics, Sports, Health, Tech, Crime, International,
+    Education, Entertainment and more. Uses MahaBERT, a Marathi language model.</p>
+    <div class="eg">cricket article → Sports (99.7%)</div></div>
+  <div class="card"><h4><span class="tag">E</span>Text summarisation</h4>
+    <p>Picks the 3 most important sentences. <b>TextRank</b> links sentences that share words (using roots),
+    and the most connected sentences win, like the most-cited pages on the web. Then it drops repeats.</p>
+    <div class="eg">~20 sentences → the 3 most central</div></div>
+  <div class="card"><h4><span class="tag">G</span>Information extraction</h4>
+    <p>Finds names of people, places, organisations, dates, times, quantities and job titles.
+    We fixed two problems: names being cut mid-letter, and one person appearing under several word forms.</p>
+    <div class="eg"><span class="mr">मुंबईत</span> → Location (<span class="mr">मुंबई</span>)</div></div>
+  <div class="card"><h4><span class="tag">F</span>Sentiment analysis</h4>
+    <p>Scores each sentence as positive, neutral or negative, then combines them into the tone of
+    the whole article, and the tone around each person mentioned.</p>
+    <div class="eg">"victory" +1.00 · "injury" −0.99</div></div>
+  <div class="card"><h4><span class="tag">A</span>Machine translation</h4>
+    <p>Translates Marathi to English with NLLB-200, Meta's translation model. It goes sentence
+    by sentence so long articles stay accurate.</p>
+    <div class="eg">Marathi → English, 600-million-parameter model</div></div>
+</div>
+<div class="card"><h4><span class="tag">C</span>Information retrieval (search)</h4>
+  <p>Three search methods over the same articles. <b>BM25</b> is classic keyword search, but run on
+  <b>roots</b> instead of raw words. <b>Dense search</b> compares meaning, so it can match sentences that
+  share no words. <b>Hybrid</b> combines both result lists by rank (called Reciprocal Rank Fusion), because the two
+  methods' scores are on completely different scales and can't simply be added.</p></div>
+
+<div class="box"><span class="lab">What we built ourselves vs. what we reused</span>
+<p><b>Written by us:</b> the morphological analyser, the BM25 search engine, the TextRank summariser, the ROUGE
+scorer, the entity-merging logic, the small in-browser models, and the demo page.<br>
+<b>Reused research models:</b> MahaBERT topic, NER and sentiment models (L3Cube, Pune) and NLLB-200 (Meta).
+We also <b>fine-tuned</b> MahaBERT ourselves as a topic classifier.</p></div>
+
+<!-- ============================================================ -->
+<h2><span class="num">4</span>How the parts fit together</h2>
+<p>An article flows through the system from top to bottom. The analyser sits at the start because
+three other parts (search, summary, entities) depend on its roots.</p>
+<div class="flow">
+  <div class="node">Raw Marathi news article</div>
+  <div class="arrow">↓</div>
+  <div class="node main">I · Morphological analyser<small>every word → root + grammar labels</small></div>
+  <div class="arrow">↓</div>
+  <div class="row">
+    <div class="node">D · Category<small>12 topics</small></div>
+    <div class="node">E · Summary<small>TextRank</small></div>
+    <div class="node">G · Entities<small>8 types</small></div>
+    <div class="node">F · Sentiment<small>per sentence</small></div>
+    <div class="node">A · Translation<small>Marathi → English</small></div>
+  </div>
+  <div class="arrow">↓</div>
+  <div class="node">Stored, analysed articles</div>
+  <div class="arrow">↓</div>
+  <div class="node main">C · Search<small>BM25 on roots + meaning search → combined</small></div>
+  <div class="arrow">↓</div>
+  <div class="row"><div class="node">Streamlit dashboard</div><div class="node">Single-file HTML demo</div></div>
+</div>
+<div class="box say"><span class="lab">Say it like this</span>
+<p>"The analyser is the spine of the system. Everything that compares words (search, summary,
+entity counting) uses its roots instead of raw words. The five middle tasks each add one kind of
+understanding, and at the end everything becomes searchable."</p></div>
+
+<!-- ============================================================ -->
+<h2><span class="num">5</span>The data and the models</h2>
+<table>
+  <tr><th>Dataset</th><th>Size</th><th>What we used it for</th></tr>
+  <tr><td><b>XL-Sum Marathi</b> (BBC Marathi)</td><td class="n">13,627 articles</td>
+      <td>The news collection, and human-written summaries to score our summariser against. We processed 3,000 articles.</td></tr>
+  <tr><td><b>MahaNews</b></td><td class="n">11,721 headlines</td><td>Training and testing our fine-tuned topic classifier.</td></tr>
+  <tr><td><b>Live RSS feeds</b></td><td>3 websites</td><td>Running the pipeline on today's news: BBC Marathi, ABP Majha, Lokmat.</td></tr>
+</table>
+<table>
+  <tr><th>Job</th><th>Model</th><th>From</th></tr>
+  <tr><td>Topic (12 classes)</td><td><code>marathi-topic-all-doc</code></td><td>L3Cube, Pune</td></tr>
+  <tr><td>Entities (8 types)</td><td><code>marathi-ner</code></td><td>L3Cube, Pune</td></tr>
+  <tr><td>Sentiment</td><td><code>marathi-sentiment-md</code></td><td>L3Cube, Pune</td></tr>
+  <tr><td>Meaning search</td><td><code>marathi-sentence-similarity-sbert</code></td><td>L3Cube, Pune</td></tr>
+  <tr><td>Our fine-tuning base</td><td><code>marathi-bert-v2</code></td><td>L3Cube, Pune</td></tr>
+  <tr><td>Translation</td><td><code>nllb-200-distilled-600M</code></td><td>Meta AI</td></tr>
+</table>
+<p>All of it runs on an ordinary laptop: an NVIDIA GPU, an Apple Silicon Mac, or even CPU only.
+Processing the 3,000 articles took about 3 minutes on a laptop GPU.</p>
+
+<!-- ============================================================ -->
+<h2><span class="num">6</span>Results: what we measured</h2>
+<p>We tested every part against a simple baseline, so any improvement we claim is real and not assumed.
+Where the result was disappointing, we report that too.</p>
+
+<h3>6.1 Search: does the analyser help?</h3>
+<p><b>How we tested:</b> use each article's headline as the search query and check whether the right
+article comes back. Headlines were removed from the searchable text, so it can't just match the exact title.</p>
+<table>
+  <tr><th>Search method</th><th class="n">Found 1st</th><th class="n">In top 5</th><th class="n">In top 10</th><th class="n">MRR@10</th></tr>
+  <tr><td>BM25, plain words</td><td class="n">0.600</td><td class="n">0.770</td><td class="n">0.817</td><td class="n">0.675</td></tr>
+  <tr class="hi"><td>BM25 + our analyser</td><td class="n">0.623</td><td class="n">0.810</td><td class="n">0.830</td><td class="n">0.702</td></tr>
+  <tr><td>Meaning search (dense)</td><td class="n">0.420</td><td class="n">0.653</td><td class="n">0.733</td><td class="n">0.527</td></tr>
+  <tr><td>Hybrid (both combined)</td><td class="n">0.550</td><td class="n">0.783</td><td class="n">0.873</td><td class="n">0.651</td></tr>
+</table>
+<p>"Found 1st" = how often the right article is the first result. MRR is an overall ranking score from 0 to 1.
+The analyser improves ranking by <b>3.9%</b>: real, but modest.</p>
+<div class="box warn"><span class="lab">An honest negative result</span>
+<p>With short searches of one or two words (the way people actually search), the analyser gives
+<b>no improvement</b>, and is even very slightly worse (score 0.212 → 0.202 for one-word searches). Two reasons: the query
+word usually also appears in the article in the same form, so there's nothing to fix; and removing endings
+sometimes merges genuinely different words.</p></div>
+<div class="box"><span class="lab">Where it really matters</span>
+<p>In <b>67.8%</b> of articles, at least one headline word appears in the text only in a different form.
+For those searches, plain search returns a <b>completely empty page 14.4%</b> of the time; with our analyser
+only <b>1.1%</b>. So the analyser's real value is <b>stopping searches from coming back empty</b>, not better ranking.</p></div>
+
+<h3>6.2 Summaries</h3>
+<p>We compared our summaries with human-written ones using ROUGE (how many words overlap), on 300 articles.
+The baseline is simply "take the first 2 sentences".</p>
+<table>
+  <tr><th>Method</th><th class="n">ROUGE-1</th><th class="n">ROUGE-2</th><th class="n">ROUGE-L</th></tr>
+  <tr><td>First 2 sentences (baseline)</td><td class="n">0.1045</td><td class="n">0.0192</td><td class="n">0.0817</td></tr>
+  <tr><td>Same, scored on roots</td><td class="n">0.1566</td><td class="n"><b>0.0300</b></td><td class="n"><b>0.1199</b></td></tr>
+  <tr><td>Our TextRank</td><td class="n">0.0981</td><td class="n">0.0184</td><td class="n">0.0757</td></tr>
+  <tr><td>Our TextRank, scored on roots</td><td class="n"><b>0.1588</b></td><td class="n">0.0296</td><td class="n">0.1154</td></tr>
+</table>
+<div class="box warn"><span class="lab">Our summariser does not beat the simple baseline</span>
+<p>For news that's expected: journalists put the key facts in the first sentences. We included the baseline
+so the comparison is honest. The more useful finding: scoring on <b>roots</b> raises every method by about 50%,
+because <span class="mr">शाळेत</span> and <span class="mr">शाळांमध्ये</span> otherwise count as a mismatch.
+This is a finding about <b>how summaries should be scored in Marathi</b>.</p></div>
+
+<h3>6.3 Topic classification</h3>
+<table>
+  <tr><th>Model</th><th class="n">Accuracy</th><th class="n">Macro-F1</th></tr>
+  <tr><td>Ready-made 12-topic model, mapped to 3 topics</td><td class="n">0.8467</td><td class="n">0.7994</td></tr>
+  <tr class="hi"><td>MahaBERT fine-tuned by us (3 topics)</td><td class="n">0.9536</td><td class="n">0.9380</td></tr>
+</table>
+<div class="box"><span class="lab">Why the better model is deliberately NOT used in the system</span>
+<p>Our fine-tuned model scores higher because it answers an <b>easier question</b>: only 3 topics
+(entertainment, sports, state) instead of 12. Using it would lump Politics, Tech, Health and Crime into one label and
+make the whole system worse. A higher score on a simpler task is not a better component.</p></div>
+
+<h3>6.4 The small in-browser models</h3>
+<p>For the demo page we trained small models to copy the big ones (explained in section 7). We checked how often they agree with the
+big models on 1,362 articles they never saw:</p>
+<table>
+  <tr><th>Task</th><th class="n">Agreement with the big model</th></tr>
+  <tr><td>Topic</td><td class="n">83.0%</td></tr>
+  <tr><td>Sentiment, per sentence / per article</td><td class="n">75.7% / 73.6%</td></tr>
+  <tr><td>Entities (F1 score)</td><td class="n">0.72</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2><span class="num">7</span>How the demo works</h2>
+<p>The demo is a <b>single web page</b> (<code>Marathi-NLP-Demo.html</code>) that runs in any browser with no
+installation. You can paste any Marathi text into any of its three tabs. The question is how it can run
+huge AI models inside a web page. The answer is different for each part:</p>
+<table>
+  <tr><th>Part</th><th>How it runs in the page</th></tr>
+  <tr><td>I · Analyser, C · Search, E · Summary</td><td>The exact same methods as our Python code, rewritten in JavaScript. We checked on
+      1,000 articles that the page gives <b>identical</b> results to Python.</td></tr>
+  <tr><td>D · Topic, F · Sentiment, G · Entities</td><td>The real models are ~700 MB each, too big for a web page. So we trained
+      <b>small "student" models</b> to copy them: we ran the big models over 13,600 articles, then taught small models to give the same
+      answers. They agree 72–83% of the time, and the page shows these numbers next to each result.</td></tr>
+  <tr><td>A · Translation</td><td>The real NLLB-200 model, downloaded into the browser the first time (~900 MB), then kept.</td></tr>
+</table>
+<div class="box"><span class="lab">Full-model mode</span>
+<p>If you run <code>python app/server.py</code> on the laptop, the page notices it and sends text to the
+<b>real, full models</b> instead. A badge next to the Analyse button shows which mode is active.
+This is the best way to show the most accurate results.</p></div>
+<figure class="w80"><img src="shots/17_stage_entities.png"><figcaption>In-browser student model</figcaption></figure>
+<figure class="w80"><img src="shots/23_full_entities.png"><figcaption>Full model (server running)</figcaption></figure>
+<p>The comparison above is a good one to show: the student wrongly thinks <span class="mr">विजय</span> ("victory") is
+a name, while the full model correctly finds <span class="mr">जसप्रीत बुमराह</span>. It explains why we show
+the agreement numbers.</p>
+<div class="box say"><span class="lab">Say it like this</span>
+<p>"Search, summaries and word analysis run exactly as in our Python code. For topic, tone and names, the real
+models are 700 MB each, so we trained small copies of them that run in the browser, and we measured and show how
+often they agree. With our local server running, the page uses the real models instead."</p></div>
+
+<!-- ============================================================ -->
+<h2><span class="num">8</span>Honest limitations</h2>
+<ul>
+  <li><b>The analyser helps search less than we expected.</b> Only about 4% better ranking, and none on short searches.
+      Its real value is preventing empty results.</li>
+  <li><b>Over-stripping.</b> <span class="mr">नदी</span> and <span class="mr">नद्या</span> both become <span class="mr">नद</span>,
+      which is not a real word. Roots are consistent labels, not dictionary words. A dictionary check is the obvious next step.</li>
+  <li><b>Name boundaries.</b> The entity model can't tell where one name ends and the next begins if they are of the same type, so
+      two neighbouring names can merge.</li>
+  <li><b>Summaries only pick sentences</b>, they don't write new ones. A model that writes summaries would need more GPU memory than we had.</li>
+  <li><b>All articles are from BBC Marathi</b>, so topics lean towards international news and politics, and tone leans negative.</li>
+  <li><b>Translation is one-way</b> (Marathi → English) and we did not score it with a number.</li>
+  <li><b>The in-browser models are approximations.</b> They agree with the real models 72–83% of the time. The page says so.</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2><span class="num">9</span>Slide-by-slide speaking notes</h2>
+<p>Notes follow your 15-slide deck. Aim for about 10 minutes of slides and 5 minutes of demo.</p>
+<table>
+  <tr><th style="width:23%">Slide</th><th>What to say</th></tr>
+  <tr><td><b>1 · Title</b></td><td>Introduce the team and the project name. "Our project teaches a computer to read Marathi news."</td></tr>
+  <tr><td><b>2 · Outline</b></td><td>"We'll cover the problem, how our system works, what we measured, and its limits. Then a live demo."</td></tr>
+  <tr><td><b>3 · Introduction</b></td><td>83 million speakers but few tools. Marathi glues endings onto words, so English tools fail. Read out the
+      <span class="mr">घर</span> chain: "a normal program sees five unrelated words."</td></tr>
+  <tr><td><b>4 · Objectives</b></td><td>Six goals: our own analyser with no training data; a search engine where we can measure
+      the analyser's real effect; seven tasks in one pipeline; a fine-tuned classifier; everything tested against a baseline; a usable demo.</td></tr>
+  <tr><td><b>5 · Background</b></td><td>Walk through the table: each row adds an ending. "Our analyser removes endings in four layers and then repairs the root.
+      It counts syllables, not characters. That fixed a real bug."</td></tr>
+  <tr><td><b>6 · Methodology</b></td><td>Follow the diagram top to bottom: article → analyser → five tasks → search → two interfaces.
+      "The analyser comes first because search, summary and entities all use its roots."</td></tr>
+  <tr><td><b>7 · Results</b></td><td>Read the numbers: 7 tasks, 3,000 articles, 54.7% smaller index, 95.4% classifier accuracy.
+      <i>Note: the slide says 44 tests; there are now 51 fast tests (59 including the model tests).</i></td></tr>
+  <tr><td><b>8 · Search results</b></td><td>"With our analyser, the right article comes first 62% of the time instead of 60%. That's a 3.9% ranking gain,
+      honestly modest. The real value: court (<span class="mr">न्यायालय</span>) finds 1 article without it and 14 with it, and empty result
+      pages drop from 14.4% to 1.1%." <b>Good moment to switch to the live demo.</b></td></tr>
+  <tr><td><b>9 · Applications</b></td><td>News search and archives, media monitoring, government portals, English access to Marathi news, and the
+      same method for other Indian languages like Hindi and Konkani.</td></tr>
+  <tr><td><b>10 · Advantages</b></td><td>No training data for the analyser; every claim tested against a baseline; runs on a laptop; a single-file demo that
+      needs no installation and works on any pasted text.</td></tr>
+  <tr><td><b>11 · Limitations</b></td><td>Read them honestly (section 8). Volunteering weaknesses first makes the project look like real research.</td></tr>
+  <tr><td><b>12 · Future scope</b></td><td>Live news already works. Next: a dictionary check for roots, summaries written by a model, better name boundaries,
+      and news sources beyond BBC.</td></tr>
+  <tr><td><b>13 · Conclusion</b></td><td>"Seven tasks around one analyser we built from scratch. Its real contribution is recall: searches stop coming back empty."</td></tr>
+  <tr><td><b>14 · References</b></td><td>Mention that the models come from L3Cube Pune and Meta, and TextRank and BM25 are classic published methods.</td></tr>
+  <tr><td><b>15 · Thank you</b></td><td>Invite questions (section 11).</td></tr>
+</table>
+<h4>One way to split it between four presenters</h4>
+<table>
+  <tr><td class="k">Presenter 1</td><td>Slides 1–4: the problem and goals</td></tr>
+  <tr><td class="k">Presenter 2</td><td>Slides 5–6: how the analyser and pipeline work</td></tr>
+  <tr><td class="k">Presenter 3</td><td>Slides 7–8 and the live demo</td></tr>
+  <tr><td class="k">Presenter 4</td><td>Slides 9–15: uses, limits, future, conclusion, questions</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2><span class="num">10</span>The live demo script</h2>
+<p>About five minutes. Open <code>Marathi-NLP-Demo.html</code> before you start (see the User Manual's checklist).</p>
+
+<h3>Tab 1 · Morphology (about 1 minute)</h3>
+<div class="box"><span class="lab">Do</span><p>The word <span class="mr">घरांमधून</span> is already loaded. Point at the coloured blocks.
+Then clear the box and type a Marathi word the audience suggests. Finally paste a whole sentence to show the table.</p></div>
+<div class="box say"><span class="lab">Say</span><p>"This one word means 'from inside the houses'. Our analyser splits it into the root
+<span class="mr">घर</span>, a plural marker and 'from'. You can type any word, it's running live, not a picture."</p></div>
+
+<h3>Tab 2 · Search (about 2 minutes, the strongest part)</h3>
+<div class="box"><span class="lab">Do, in this order</span>
+<ol style="margin:0">
+  <li>Open Search. <span class="mr">न्यायालय</span> (court) is loaded: point at <b>1</b> vs <b>14</b>.</li>
+  <li>Click <span class="mr">पाऊस</span> (rain): both sides show <b>3</b>.</li>
+  <li>Give the honest conclusion.</li>
+</ol></div>
+<div class="box say"><span class="lab">Say</span>
+<p>"Same query, same 400 articles. Without our analyser: one result. With it: fourteen. The other thirteen say 'court' in a different grammatical form."</p>
+<p>"But for 'rain' it makes no difference: the articles use the exact same form. That's why our measured ranking gain is only about four percent.
+The real value is that searches stop coming back empty: from 14% to 1%."</p></div>
+<div class="box warn"><span class="lab">Don't skip the rain example</span>
+<p>Showing where it does <i>not</i> help, before anyone asks, is what makes the result believable.</p></div>
+
+<h3>Tab 3 · Full pipeline (about 2 minutes)</h3>
+<div class="box"><span class="lab">Do</span>
+<ol style="margin:0">
+  <li>Open Full pipeline, click <b>Clear</b>, paste a Marathi article copied from today's news, and click <b>Analyse</b>.</li>
+  <li>Walk down the boxes: Category, Summary, Entities, Sentiment.</li>
+  <li>Click <b>Translate to English</b>.</li>
+  <li>Point at the small grey labels ("in-browser · 83% agreement", or "full model" if the server is running).</li>
+</ol></div>
+<div class="box say"><span class="lab">Say</span>
+<p>"This article came from today's news, so nothing is prepared in advance. It's categorised, summarised to the three key sentences,
+the names and places are pulled out automatically, the tone is scored sentence by sentence, and it's translated to English."</p>
+<p>"The small labels tell you which model produced each result and how accurate it is. We measured that honestly too."</p></div>
+<figure class="half"><img src="shots/13_pipeline_results.png"><figcaption>What the Full pipeline results look like</figcaption></figure>
+
+<!-- ============================================================ -->
+<h2><span class="num">11</span>Questions you may be asked</h2>
+
+<h4>Did you train anything yourselves, or only use ready-made models?</h4>
+<p>Both. The analyser is written entirely by us, with rules and no training data. We fine-tuned MahaBERT as a topic classifier and reached
+<b>95.4%</b> accuracy, up from 84.7%. We also trained the small in-browser models ourselves. The entity, sentiment and translation
+models are published research models from L3Cube and Meta.</p>
+
+<h4>Why isn't your better classifier used in the system?</h4>
+<p>Because it answers an easier question: 3 topics instead of 12. Using it would merge Politics, Tech and Health into one label.
+A higher number on a simpler task is not a better component.</p>
+
+<h4>How much does the analyser actually help?</h4>
+<p>Less than we first expected, and we measured it three ways instead of reporting only the best one. Ranking improves about 4%,
+short searches not at all. Its real value is cutting empty searches from 14.4% to 1.1%, and halving the index size.</p>
+
+<h4>Is your summariser better than just taking the first sentences?</h4>
+<p>No, and we report that. News puts the key facts first, so the first sentences are a strong baseline (0.105 vs our 0.098 ROUGE-1).
+The interesting finding is that scoring on roots raises every method by about 50%.</p>
+
+<h4>Is the web page running the real models?</h4>
+<p>For word analysis, search and summaries: yes, the same methods, checked on 1,000 articles with zero differences. For topic,
+sentiment and entities the real models are 700 MB each, so the page uses small copies we trained, which agree 72–83% of the time.
+The page shows those numbers. With our local server running, it uses the real models.</p>
+
+<h4>What are the weaknesses?</h4>
+<p>Over-stripping (<span class="mr">नदी</span> and <span class="mr">नद्या</span> both become <span class="mr">नद</span>); neighbouring
+names can merge; summaries only pick sentences; all articles are from BBC Marathi so topics and tone are skewed; the in-browser models are approximations.</p>
+
+<h4>Can it handle today's news?</h4>
+<p>Yes. You can paste any article into the demo. The Python version can also fetch live articles from BBC Marathi, ABP Majha and Lokmat
+and run the whole pipeline on them (the Analyse tab of the Streamlit dashboard).</p>
+
+<h4>What is BM25? What is TextRank?</h4>
+<p><b>BM25</b> is the standard keyword-search formula: a result scores higher if it contains the query words often, especially rare
+words, adjusted for article length. <b>TextRank</b> ranks sentences the way Google's PageRank ranks web pages: a sentence is important
+if many other sentences are similar to it.</p>
+
+<h4>How do you know the results are correct?</h4>
+<p>59 automated tests check the analyser's rules, the search ranking, the summariser, the scoring and the entity merging. Two of them
+guard against bugs we found during development. A separate check confirms the web page gives the same answers as Python.</p>
+
+<!-- ============================================================ -->
+<h2><span class="num">12</span>Numbers and words to remember</h2>
+<table>
+  <tr><td class="k">7</td><td>NLP tasks: I, D, E, G, F, A, C</td></tr>
+  <tr><td class="k">83 million</td><td>Marathi speakers</td></tr>
+  <tr><td class="k">3,000</td><td>articles processed (from 13,627 in XL-Sum)</td></tr>
+  <tr><td class="k">36%</td><td>of words carry an ending the analyser removes</td></tr>
+  <tr><td class="k">54.7%</td><td>smaller search index (186,593 → 84,480 words)</td></tr>
+  <tr><td class="k">+3.9%</td><td>better search ranking with the analyser (MRR 0.675 → 0.702)</td></tr>
+  <tr><td class="k">14.4% → 1.1%</td><td>empty search pages, without vs. with the analyser</td></tr>
+  <tr><td class="k">1 → 14</td><td>results for <span class="mr">न्यायालय</span> (court), without vs. with</td></tr>
+  <tr><td class="k">95.4%</td><td>our fine-tuned classifier's accuracy (vs. 84.7%)</td></tr>
+  <tr><td class="k">83% · 74% · 0.72</td><td>in-browser models' agreement: topic · article tone · entities (F1)</td></tr>
+  <tr><td class="k">59</td><td>automated tests (51 fast + 8 that load the models)</td></tr>
+</table>
+<h4>Glossary</h4>
+<table>
+  <tr><td class="k">Agglutinative</td><td>A language that builds meaning by gluing endings onto words, like Marathi.</td></tr>
+  <tr><td class="k">Root / stem</td><td>The basic part of a word after removing endings (<span class="mr">घर</span> in <span class="mr">घरात</span>).</td></tr>
+  <tr><td class="k">Baseline</td><td>A simple method you compare against, to prove your method adds something.</td></tr>
+  <tr><td class="k">MahaBERT</td><td>A large AI language model trained on Marathi text by L3Cube, Pune.</td></tr>
+  <tr><td class="k">Fine-tuning</td><td>Training an existing model a little more on your own task.</td></tr>
+  <tr><td class="k">MRR</td><td>A search score: 1.0 if the right answer is always first, lower if it's further down.</td></tr>
+  <tr><td class="k">ROUGE</td><td>A summary score: how many words a summary shares with a human-written one.</td></tr>
+  <tr><td class="k">F1 score</td><td>Combines "how many found items are right" and "how many right items were found". 1.0 is perfect.</td></tr>
+  <tr><td class="k">Student model</td><td>A small model trained to copy a big model's answers, so it can run somewhere small, like a web page.</td></tr>
+</table>
+
+<div class="foot">Marathi News Intelligence Pipeline · Explanation guide · All results reproducible with <code>python scripts/evaluate.py --task all</code></div>
+</body></html>

@@ -1,0 +1,6 @@
+{
+  "name": "marathi-nlp-docs",
+  "private": true,
+  "description": "Builds the demo manual and explanation guide PDFs",
+  "dependencies": { "puppeteer-core": "^24.0.0" }
+}

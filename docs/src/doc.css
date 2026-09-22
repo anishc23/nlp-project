@@ -1,0 +1,100 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Tiro+Devanagari+Marathi&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+:root{
+  --ink:#1c2b30; --soft:#4f666d; --mute:#8aa0a6; --line:#d9e4e7;
+  --accent:#1f7d7d; --accent-bg:#ecf5f4; --tint:#f4f8f9;
+  --say:#fdf3e4; --say-ink:#7a4d17; --warn:#fbeae6; --warn-ink:#9a4535;
+  --sans:"DM Sans",system-ui,sans-serif;
+  --serif:"Source Serif 4",Georgia,serif;
+  --mono:"IBM Plex Mono",Menlo,monospace;
+  --deva:"Tiro Devanagari Marathi","Kohinoor Devanagari",serif;
+}
+@page{size:A4;margin:18mm 17mm 20mm}
+*{box-sizing:border-box}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{margin:0;font-family:var(--serif);font-size:10.6pt;line-height:1.55;color:var(--ink)}
+.mr,.deva{font-family:var(--deva);font-style:normal}
+
+h1,h2,h3,h4{font-family:var(--sans);color:var(--ink);line-height:1.25;margin:0}
+.kicker{font-family:var(--mono);font-size:8pt;letter-spacing:.22em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:25pt;letter-spacing:-.02em;margin:8px 0 8px}
+.sub{font-family:var(--sans);font-size:12pt;color:var(--soft);margin:0 0 16px}
+h2{font-size:15pt;color:var(--accent);border-bottom:2px solid var(--accent);padding-bottom:5px;
+   margin:26px 0 12px;break-after:avoid}
+h2 .num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:5px;
+   background:var(--accent);color:#fff;font-size:10.5pt;margin-right:9px;vertical-align:2px}
+h3{font-size:11.5pt;margin:18px 0 6px;break-after:avoid}
+h4{font-size:10pt;margin:12px 0 4px;color:var(--soft);break-after:avoid}
+p{margin:0 0 9px}
+ul,ol{margin:0 0 10px;padding-left:20px}
+li{margin:3px 0}
+b,strong{font-weight:600}
+code{font-family:var(--mono);font-size:8.6pt;background:var(--tint);border:1px solid var(--line);
+     padding:0 4px;border-radius:3px}
+pre{font-family:var(--mono);font-size:8.6pt;background:var(--tint);border:1px solid var(--line);
+    border-radius:6px;padding:9px 12px;margin:6px 0 12px;white-space:pre-wrap;break-inside:avoid}
+
+/* key numbers strip */
+.stats{display:flex;gap:26px;flex-wrap:wrap;border-bottom:2px solid var(--accent);padding:6px 0 14px;margin-bottom:6px}
+.stats div b{display:block;font-family:var(--mono);font-size:15pt;font-weight:500;color:var(--accent)}
+.stats div span{font-family:var(--mono);font-size:7pt;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+
+/* tables */
+table{width:100%;border-collapse:collapse;margin:6px 0 12px;font-family:var(--sans);font-size:9.4pt}
+tr{break-inside:avoid}
+th{font-family:var(--mono);font-size:7.3pt;letter-spacing:.08em;text-transform:uppercase;
+   color:var(--mute);font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n,th.n{text-align:right;font-family:var(--mono);font-size:8.8pt}
+tr.hi td{background:var(--accent-bg);font-weight:600}
+td.k{font-family:var(--mono);font-size:8pt;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;width:24%}
+
+/* callouts */
+.box{border-left:4px solid var(--accent);background:var(--accent-bg);padding:9px 13px;border-radius:0 6px 6px 0;
+     margin:8px 0 12px;break-inside:avoid}
+.box .lab{font-family:var(--mono);font-size:7.3pt;letter-spacing:.14em;text-transform:uppercase;
+     color:var(--accent);display:block;margin-bottom:3px;font-weight:500}
+.box.say{border-color:#a8742e;background:var(--say)}
+.box.say .lab{color:var(--say-ink)}
+.box.say p{font-style:italic}
+.box.warn{border-color:#b5584a;background:var(--warn)}
+.box.warn .lab{color:var(--warn-ink)}
+.box.note{border-color:#8aa0a6;background:var(--tint)}
+.box.note .lab{color:var(--soft)}
+.box p:last-child,.box ul:last-child,.box ol:last-child{margin-bottom:0}
+
+/* steps */
+ol.steps{list-style:none;padding:0;counter-reset:s}
+ol.steps>li{counter-increment:s;position:relative;padding-left:32px;margin:7px 0}
+ol.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:21px;height:21px;border-radius:50%;
+   background:var(--accent);color:#fff;font-family:var(--sans);font-size:9pt;font-weight:700;
+   display:grid;place-items:center}
+
+/* figures */
+figure{margin:8px 0 14px;break-inside:avoid;text-align:center}
+figure img{max-width:100%;border:1px solid var(--line);border-radius:7px}
+figure.half img{max-width:70%}
+figure.w80 img{max-width:80%}
+figcaption{font-family:var(--mono);font-size:7.6pt;color:var(--mute);margin-top:5px}
+
+/* two-column cards */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 12px}
+.card{border:1px solid var(--line);border-radius:7px;padding:10px 12px;break-inside:avoid}
+.card h4{margin:0 0 4px;color:var(--ink);font-size:10.5pt}
+.card h4 .tag{display:inline-grid;place-items:center;width:19px;height:19px;border-radius:4px;background:var(--accent);
+   color:#fff;font-family:var(--mono);font-size:8pt;margin-right:6px;vertical-align:1px}
+.card p{font-size:9.6pt;margin-bottom:5px}
+.card .eg{font-family:var(--mono);font-size:8pt;color:var(--soft);border-top:1px dashed var(--line);padding-top:5px;margin-top:6px}
+
+/* flow diagram */
+.flow{display:flex;flex-direction:column;align-items:center;gap:0;margin:10px 0 14px;font-family:var(--sans);break-inside:avoid}
+.flow .node{border:1.5px solid var(--accent);border-radius:7px;padding:6px 14px;background:#fff;text-align:center;font-size:9.4pt}
+.flow .node small{display:block;color:var(--mute);font-size:7.8pt}
+.flow .node.main{background:var(--accent);color:#fff}
+.flow .node.main small{color:#d4ecea}
+.flow .arrow{color:var(--accent);font-size:13pt;line-height:1.1}
+.flow .row{display:flex;gap:8px}
+.flow .row .node{min-width:92px}
+
+.toc{columns:2;font-family:var(--sans);font-size:9.6pt;margin:4px 0 8px;padding-left:18px}
+.foot{font-family:var(--mono);font-size:7.5pt;color:var(--mute);border-top:1px solid var(--line);padding-top:8px;margin-top:22px}

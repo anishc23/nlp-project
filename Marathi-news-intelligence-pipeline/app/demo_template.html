@@ -463,26 +463,66 @@
   }
 
   /* ================= in-browser translation (NLLB-200) ================= */
+  // The worker holds no static import, so it always starts; it then fetches
+  // transformers.js from the first CDN that answers. Some networks (several
+  // Indian mobile carriers, for one) block cdn.jsdelivr.net outright, so the
+  // same file is tried on unpkg and on jsDelivr's alternate hostnames, and the
+  // ONNX runtime's WebAssembly is loaded from whichever CDN worked -- by
+  // default transformers.js would fetch it from cdn.jsdelivr.net regardless.
   const WORKER_SRC = `
-    import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
-    env.allowLocalModels = false;
-    let tr = null;
+    const PKG = "@huggingface/transformers@3.8.1/dist/";
+    const CDNS = ["https://cdn.jsdelivr.net/npm/", "https://unpkg.com/",
+                  "https://fastly.jsdelivr.net/npm/", "https://gcore.jsdelivr.net/npm/"];
+    const MODEL = "Xenova/nllb-200-distilled-600M";
+    let lib = null, tr = null;
+
+    const withTimeout = (p, ms) => Promise.race([p,
+      new Promise((_, rej) => setTimeout(() => rej(new Error("timed out")), ms))]);
+
+    async function loadLibrary() {
+      const tried = [];
+      for (const cdn of CDNS) {
+        const base = cdn + PKG, host = new URL(cdn).host;
+        self.postMessage({ type: "status", text: "Loading the translation program from " + host + "…" });
+        try {
+          const m = await withTimeout(import(base + "transformers.min.js"), 20000);
+          m.env.allowLocalModels = false;
+          m.env.backends.onnx.wasm.wasmPaths = base;
+          return m;
+        } catch (err) { tried.push(host); }
+      }
+      const e = new Error("Could not load the translation program — this network blocks " +
+        tried.join(", ") + ". Try another network (e.g. Wi-Fi), or use “Show saved translation” " +
+        "for the examples, or run python app/server.py.");
+      e.stage = "program";
+      throw e;
+    }
+
     self.onmessage = async (e) => {
       const { texts } = e.data;
       try {
+        if (!lib) lib = await loadLibrary();
         if (!tr) {
           const files = {};
-          tr = await pipeline("translation", "Xenova/nllb-200-distilled-600M", {
-            dtype: "q8",
-            progress_callback: (p) => {
-              if (p.status === "progress" && p.total) {
-                files[p.file] = [p.loaded, p.total];
-                let l = 0, t = 0;
-                for (const [a, b] of Object.values(files)) { l += a; t += b; }
-                self.postMessage({ type: "download", loaded: l, total: t });
-              }
-            },
-          });
+          try {
+            tr = await lib.pipeline("translation", MODEL, {
+              dtype: "q8",
+              progress_callback: (p) => {
+                if (p.status === "progress" && p.total) {
+                  files[p.file] = [p.loaded, p.total];
+                  let l = 0, t = 0;
+                  for (const [a, b] of Object.values(files)) { l += a; t += b; }
+                  self.postMessage({ type: "download", loaded: l, total: t });
+                }
+              },
+            });
+          } catch (err) {
+            const m = new Error("Could not download the translation model from huggingface.co (" +
+              String((err && err.message) || err) + "). Check the connection and try again, or run " +
+              "python app/server.py.");
+            m.stage = "model";
+            throw m;
+          }
         }
         const out = [];
         for (let i = 0; i < texts.length; i++) {
@@ -492,7 +532,8 @@
         }
         self.postMessage({ type: "done", out });
       } catch (err) {
-        self.postMessage({ type: "error", message: String((err && err.message) || err) });
+        self.postMessage({ type: "error", stage: err.stage || "translate",
+                           message: String((err && err.message) || err) });
       }
     };`;
   let worker = null;
@@ -504,12 +545,15 @@
       }
       worker.onmessage = e=>{
         const m = e.data;
-        if(m.type==="download") onStatus(`Downloading the translation model (once, then cached): ${(m.loaded/1e6).toFixed(0)} / ${(m.total/1e6).toFixed(0)} MB`);
+        if(m.type==="status") onStatus(m.text);
+        else if(m.type==="download") onStatus(`Downloading the translation model (once, then cached): ${(m.loaded/1e6).toFixed(0)} / ${(m.total/1e6).toFixed(0)} MB`);
         else if(m.type==="step") onStatus(`Translating sentence ${m.i+1} of ${m.n}…`);
         else if(m.type==="done") resolve(m.out);
         else if(m.type==="error") reject(new Error(m.message));
       };
-      worker.onerror = e=>{ worker = null; reject(new Error(e.message || "worker failed to start")); };
+      worker.onerror = e=>{ worker = null;
+        reject(new Error("The browser could not start the translator (" + (e.message || "worker error") +
+          "). Try Chrome or Edge, or run python app/server.py.")); };
       worker.postMessage({texts});
     });
   }
@@ -635,7 +679,7 @@
       render();
     }catch(err){
       btn.disabled = false;
-      set("Translation failed: " + err.message + " — the first run needs an internet connection.", true);
+      set("Translation failed: " + err.message, true);
     }
   }
 

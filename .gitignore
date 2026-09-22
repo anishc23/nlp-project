@@ -5,3 +5,4 @@ __pycache__/
 .venv/
 venv/
 .pipeline-original.git/
+*.zip
