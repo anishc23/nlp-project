@@ -10,6 +10,7 @@ around a morphological analyser written from scratch.
 | [`Marathi-news-intelligence-pipeline/Marathi-NLP-Demo.html`](Marathi-news-intelligence-pipeline/Marathi-NLP-Demo.html) | Standalone demo page — download and double-click, no install needed |
 | [`docs/Demo-User-Manual.pdf`](docs/Demo-User-Manual.pdf) | How to run and use the demo, step by step |
 | [`docs/Project-Explanation-Guide.pdf`](docs/Project-Explanation-Guide.pdf) | Plain-language explanation of the project, speaking notes and likely questions |
+| [`docs/Source-Code.pdf`](docs/Source-Code.pdf) | Aim, objectives, theory and the complete source code listing |
 | `NLP_Mini_Project_Deck.pptx`, `nlp ppt.pdf` | Presentation slides |
 
 ## Quick start

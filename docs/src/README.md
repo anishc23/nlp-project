@@ -13,4 +13,12 @@ node shoot.js full                # screenshots with the full models
 node render.js                    # writes both PDFs
 ```
 
+The source-code listing (`../Source-Code.pdf`) is built from the project's own
+files, so it stays in step with what is committed:
+
+```bash
+python build_code_doc.py          # writes code.html
+node render_code.js               # writes ../Source-Code.pdf
+```
+
 Set `CHROME=/path/to/chrome` if Chrome is not in the default macOS location.
